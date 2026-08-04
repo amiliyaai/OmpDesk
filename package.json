@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "oh-my-pi (omp) desktop client - a GUI for the terminal AI coding agent",
   "main": "./out/main/index.js",
-  "author": "amiliyaai",
+  "author": {
+    "name": "amiliyaai",
+    "email": "amiliyaai@users.noreply.github.com"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
