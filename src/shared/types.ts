@@ -234,6 +234,8 @@ export type MainEvent =
   | { type: 'ui:resolved'; id: string }
   | { type: 'notice'; level: 'info' | 'warn' | 'error'; text: string }
   | { type: 'app:new-session' }
+  | { type: 'app:open-settings' }
+  | { type: 'app:pick-workspace' }
   | { type: 'updater:state'; state: UpdaterState }
 
 // ---------- 自动更新状态 ----------
@@ -259,6 +261,8 @@ export interface BootstrapData {
 // ---------- preload 暴露的 API ----------
 
 export interface OmpApi {
+  /** 运行平台(渲染端菜单栏 macOS 隐藏用) */
+  platform: string
   bootstrap(): Promise<BootstrapData>
   getSessions(): Promise<SessionMeta[]>
   getSessionDetail(filePath: string): Promise<SessionDetail>
@@ -290,6 +294,12 @@ export interface OmpApi {
   setPinned(filePath: string, pinned: boolean): Promise<void>
   getOmpLogs(count: number): Promise<string[]>
   pickDirectory(): Promise<string | null>
+  /** 切换窗口全屏 */
+  toggleFullScreen(): Promise<void>
+  /** 完全退出应用(菜单"退出") */
+  quit(): Promise<void>
+  /** 弹出"关于"对话框(主进程) */
+  showAbout(): Promise<void>
   checkForUpdates(): Promise<void>
   quitAndInstall(): Promise<void>
   onEvent(cb: (e: MainEvent) => void): () => void

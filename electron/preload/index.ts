@@ -8,6 +8,7 @@ import type {
 } from '../../src/shared/types'
 
 const api: OmpApi = {
+  platform: process.platform,
   bootstrap: () => ipcRenderer.invoke('omp:bootstrap'),
   getSessions: () => ipcRenderer.invoke('omp:getSessions'),
   getSessionDetail: (filePath: string) => ipcRenderer.invoke('omp:getSessionDetail', filePath),
@@ -45,6 +46,9 @@ const api: OmpApi = {
     ipcRenderer.invoke('omp:setPinned', filePath, pinned),
   getOmpLogs: (count: number) => ipcRenderer.invoke('omp:getOmpLogs', count),
   pickDirectory: () => ipcRenderer.invoke('omp:pickDirectory'),
+  toggleFullScreen: () => ipcRenderer.invoke('window:toggleFullScreen'),
+  quit: () => ipcRenderer.invoke('app:quit'),
+  showAbout: () => ipcRenderer.invoke('app:showAbout'),
   checkForUpdates: () => ipcRenderer.invoke('updater:check'),
   quitAndInstall: () => ipcRenderer.invoke('updater:quitAndInstall'),
   onEvent: (cb: (e: MainEvent) => void) => {

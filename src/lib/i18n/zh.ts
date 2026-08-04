@@ -232,6 +232,29 @@ export const zh = {
     saveMcp: '保存'
   },
 
+  menubar: {
+    file: '文件',
+    edit: '编辑',
+    view: '视图',
+    help: '帮助',
+    newChat: '新聊天',
+    openFolder: '打开文件夹',
+    settings: '设置',
+    close: '关闭',
+    undo: '撤销',
+    redo: '重做',
+    cut: '剪切',
+    copy: '复制',
+    paste: '粘贴',
+    selectAll: '全选',
+    zoomIn: '放大',
+    zoomOut: '缩小',
+    resetZoom: '实际大小',
+    fullscreen: '切换全屏',
+    checkUpdates: '检查更新…',
+    about: '关于'
+  },
+
   tray: {
     open: '打开 OmpDesk',
     newSession: '新建会话',

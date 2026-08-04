@@ -341,6 +341,18 @@ export const useStore = create<State>((set, get) => ({
       case 'app:new-session':
         void get().newSession()
         break
+      case 'app:open-settings':
+        set({ showSettings: true })
+        break
+      case 'app:pick-workspace': {
+        void (async () => {
+          const p = await window.omp.pickDirectory()
+          if (!p) return
+          await get().setSettings({ defaultWorkspace: p })
+          await get().newSession()
+        })()
+        break
+      }
     }
   },
 

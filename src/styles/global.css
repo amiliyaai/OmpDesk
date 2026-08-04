@@ -282,6 +282,26 @@ textarea { resize: none; }
 .topbar-title { font-size: 13px; color: var(--text-dim); max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar-right { display: flex; align-items: center; gap: 8px; }
 
+/* ---------- 菜单栏(渲染端自绘, 参照 Codex) ---------- */
+.menubar {
+  display: flex; align-items: center; height: 30px;
+  padding: 0 8px; border-bottom: 1px solid var(--border);
+  background: var(--bg-panel); gap: 2px;
+  user-select: none;
+}
+.menubar-item {
+  padding: 3px 10px; border-radius: 6px;
+  font-size: 12.5px; color: var(--text-dim); background: transparent;
+}
+.menubar-item:hover { background: var(--bg-hover); color: var(--text); }
+.menubar-item.active { background: var(--bg-hover); color: var(--text); }
+.menubar-menu {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+  padding: 5px; min-width: 230px;
+}
+.menubar-menu [role='menuitem'] { font-size: 12.5px; padding: 5px 8px; border-radius: 6px; }
+
 /* 模型选择 */
 .model-picker { position: relative; }
 .model-picker-btn {

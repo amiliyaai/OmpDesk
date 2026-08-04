@@ -232,6 +232,29 @@ export const ja = {
     saveMcp: '保存'
   },
 
+  menubar: {
+    file: 'ファイル',
+    edit: '編集',
+    view: '表示',
+    help: 'ヘルプ',
+    newChat: '新しいチャット',
+    openFolder: 'フォルダを開く',
+    settings: '設定',
+    close: '閉じる',
+    undo: '元に戻す',
+    redo: 'やり直し',
+    cut: '切り取り',
+    copy: 'コピー',
+    paste: '貼り付け',
+    selectAll: 'すべて選択',
+    zoomIn: '拡大',
+    zoomOut: '縮小',
+    resetZoom: '実際のサイズ',
+    fullscreen: '全画面表示',
+    checkUpdates: '更新を確認…',
+    about: 'バージョン情報'
+  },
+
   tray: {
     open: 'OmpDesk を開く',
     newSession: '新規セッション',

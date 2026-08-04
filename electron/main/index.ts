@@ -3,11 +3,13 @@ import {
   BrowserWindow,
   dialog,
   globalShortcut,
+  ipcMain,
   Menu,
   nativeImage,
   Notification,
   shell,
-  Tray
+  Tray,
+  type MenuItemConstructorOptions
 } from 'electron'
 import { promises as fsp } from 'node:fs'
 import path from 'node:path'
@@ -73,8 +75,10 @@ async function bootstrap(): Promise<void> {
     onState: (state: UpdaterState) => sendToWindow({ type: 'updater:state', state })
   })
 
-  // 4) 窗口 / 托盘 / 快捷键 / IPC
+  // 4) 窗口 / 菜单 / 托盘 / 快捷键 / IPC
   createWindow()
+  setApplicationMenu()
+  registerWindowIpc()
   createTray()
   registerHotkey()
   registerIpc({
@@ -196,6 +200,19 @@ function showWindow(): void {
   mainWindow.focus()
 }
 
+/** 窗口级 IPC(菜单栏动作) */
+function registerWindowIpc(): void {
+  ipcMain.handle('window:toggleFullScreen', () => {
+    if (!mainWindow) return
+    mainWindow.setFullScreen(!mainWindow.isFullScreen())
+  })
+  ipcMain.handle('app:quit', () => {
+    isQuitting = true
+    app.quit()
+  })
+  ipcMain.handle('app:showAbout', () => showAboutDialog())
+}
+
 /** 关闭到托盘的首开提示(仅一次) */
 async function maybeTrayHint(): Promise<void> {
   if (settings.trayHintShown) return
@@ -268,6 +285,102 @@ function showAboutDialog(): void {
   }).then((r) => {
     if (r.response === 0) void shell.openExternal('https://github.com/amiliyaai/OmpDesk')
   })
+}
+
+// ---------- 应用菜单(macOS 屏顶菜单 / Win/Linux 隐藏但快捷键生效; 渲染端自绘菜单栏仅非 mac 显示) ----------
+
+function setApplicationMenu(): void {
+  const isMac = process.platform === 'darwin'
+  const t = tMain
+  const template: MenuItemConstructorOptions[] = [
+    ...(isMac
+      ? ([
+          {
+            label: 'OmpDesk',
+            submenu: [
+              { label: t('menubar.about'), click: () => showAboutDialog() },
+              { type: 'separator' as const },
+              { role: 'hide' as const },
+              { role: 'hideOthers' as const },
+              { role: 'unhide' as const },
+              { type: 'separator' as const },
+              { role: 'quit' as const, label: t('tray.quit') }
+            ]
+          }
+        ] satisfies MenuItemConstructorOptions[])
+      : []),
+    {
+      label: t('menubar.file'),
+      submenu: [
+        {
+          label: t('menubar.newChat'),
+          accelerator: 'CmdOrCtrl+N',
+          click: () => sendToWindow({ type: 'app:new-session' })
+        },
+        {
+          label: t('menubar.openFolder'),
+          accelerator: 'CmdOrCtrl+O',
+          click: () => sendToWindow({ type: 'app:pick-workspace' })
+        },
+        { type: 'separator' },
+        {
+          label: t('menubar.settings'),
+          accelerator: 'CmdOrCtrl+,',
+          click: () => sendToWindow({ type: 'app:open-settings' })
+        },
+        { type: 'separator' },
+        ...(isMac
+          ? ([{ role: 'close' as const, label: t('menubar.close') }] satisfies MenuItemConstructorOptions[])
+          : [
+              {
+                label: t('menubar.close'),
+                accelerator: 'CmdOrCtrl+W',
+                click: () => mainWindow?.close()
+              },
+              {
+                label: t('tray.quit'),
+                accelerator: 'CmdOrCtrl+Q',
+                click: () => {
+                  isQuitting = true
+                  app.quit()
+                }
+              }
+            ])
+      ]
+    },
+    {
+      label: t('menubar.edit'),
+      submenu: [
+        { role: 'undo', label: t('menubar.undo') },
+        { role: 'redo', label: t('menubar.redo') },
+        { type: 'separator' },
+        { role: 'cut', label: t('menubar.cut') },
+        { role: 'copy', label: t('menubar.copy') },
+        { role: 'paste', label: t('menubar.paste') },
+        { role: 'selectAll', label: t('menubar.selectAll') }
+      ]
+    },
+    {
+      label: t('menubar.view'),
+      submenu: [
+        { role: 'zoomIn', label: t('menubar.zoomIn') },
+        { role: 'zoomOut', label: t('menubar.zoomOut') },
+        { role: 'resetZoom', label: t('menubar.resetZoom') },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: t('menubar.fullscreen') }
+      ]
+    },
+    ...(isMac ? ([{ role: 'windowMenu' as const }] satisfies MenuItemConstructorOptions[]) : []),
+    {
+      role: 'help',
+      label: t('menubar.help'),
+      submenu: [
+        { label: t('menubar.checkUpdates'), click: () => checkForUpdates(true) },
+        { label: t('menubar.about'), click: () => showAboutDialog() }
+      ]
+    }
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
 // ---------- 全局快捷键 ----------

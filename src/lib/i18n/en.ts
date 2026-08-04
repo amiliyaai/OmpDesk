@@ -232,6 +232,29 @@ export const en = {
     saveMcp: 'Save'
   },
 
+  menubar: {
+    file: 'File',
+    edit: 'Edit',
+    view: 'View',
+    help: 'Help',
+    newChat: 'New Chat',
+    openFolder: 'Open Folder',
+    settings: 'Settings',
+    close: 'Close',
+    undo: 'Undo',
+    redo: 'Redo',
+    cut: 'Cut',
+    copy: 'Copy',
+    paste: 'Paste',
+    selectAll: 'Select All',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    resetZoom: 'Actual Size',
+    fullscreen: 'Toggle Full Screen',
+    checkUpdates: 'Check for Updates…',
+    about: 'About'
+  },
+
   tray: {
     open: 'Open OmpDesk',
     newSession: 'New Session',

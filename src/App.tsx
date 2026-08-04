@@ -4,6 +4,7 @@ import { Toaster } from 'sonner'
 import { useStore } from './store'
 import type { UpdaterState } from './shared/types'
 import { Sidebar } from './components/Sidebar'
+import { MenuBar } from './components/MenuBar'
 import { ChatView } from './components/ChatView'
 import { Composer } from './components/Composer'
 import { StatusBar } from './components/StatusBar'
@@ -85,6 +86,8 @@ export default function App() {
     <div className="app">
       <Sidebar />
       <main className="main">
+        {/* macOS 用原生屏顶菜单; 其余平台渲染端自绘菜单栏 */}
+        {window.omp.platform !== 'darwin' && <MenuBar />}
         <header className="topbar">
           <div className="topbar-left">
             {switching && (
