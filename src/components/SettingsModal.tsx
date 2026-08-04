@@ -9,10 +9,10 @@ import {
   Plus,
   Server,
   Sparkles,
-  Trash2,
-  X
+  Trash2
 } from 'lucide-react'
 import { useStore } from '../store'
+import { Dialog, DialogContent } from './ui/dialog'
 import type { ApprovalMode, McpServerDraft, RoleModels } from '../shared/types'
 
 // ---------- 模型服务: 方案(CC Switch 式) ----------
@@ -202,16 +202,7 @@ export function SettingsModal() {
     }
   }, [open, settings?.defaultWorkspace, settings?.hotkey, refreshProviders, refreshProfiles, refreshMcp, refreshSkills])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, setOpen])
-
-  if (!open || !settings) return null
+  if (!settings) return null
 
   const flashSaved = (): void => {
     setSaved(true)
@@ -219,11 +210,10 @@ export function SettingsModal() {
   }
 
   return (
-    <div className="modal-overlay" onMouseDown={() => setOpen(false)}>
-      <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="modal max-w-[860px] p-0" showClose>
         <div className="modal-head">
           <h2>设置</h2>
-          <button className="icon-btn" onClick={() => setOpen(false)}><X size={16} /></button>
         </div>
         <div className="modal-body">
           <nav className="settings-nav">
@@ -428,7 +418,7 @@ export function SettingsModal() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

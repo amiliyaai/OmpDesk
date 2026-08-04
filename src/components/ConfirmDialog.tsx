@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { useStore } from '../store'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from './ui/dialog'
+import { Button } from './ui/button'
 
-/** 自定义确认弹窗(替代原生 confirm, 支持 Enter/Esc) */
+/** 自定义确认弹窗(替代原生 confirm, Radix Dialog + Enter/Esc 支持) */
 export function ConfirmDialog() {
   const queue = useStore((s) => s.confirmQueue)
   const resolveConfirm = useStore((s) => s.resolveConfirm)
@@ -17,41 +26,61 @@ export function ConfirmDialog() {
   useEffect(() => {
     if (!req) return
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') resolveConfirm(req.id, false)
-      else if (e.key === 'Enter') resolveConfirm(req.id, true)
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') setFocused((f) => (f === 'ok' ? 'cancel' : 'ok'))
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        resolveConfirm(req.id, true)
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        setFocused((f) => (f === 'ok' ? 'cancel' : 'ok'))
+      }
     }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
   }, [req, resolveConfirm])
 
-  if (!req) return null
-
   return (
-    <div className="modal-overlay confirm-overlay" onMouseDown={() => resolveConfirm(req.id, false)}>
-      <div className="confirm-dialog" onMouseDown={(e) => e.stopPropagation()} role="alertdialog" aria-label={req.title}>
-        <div className="confirm-icon">
-          <AlertTriangle size={18} />
+    <Dialog
+      open={req !== null}
+      onOpenChange={(open) => {
+        // Esc 或遮罩点击 → 取消
+        if (!open && req) resolveConfirm(req.id, false)
+      }}
+    >
+      <DialogContent
+        className="confirm-dialog max-w-[400px] p-5"
+        showClose={false}
+      >
+        <div className="flex items-start gap-3">
+          <div className="confirm-icon mt-0.5">
+            <AlertTriangle size={18} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">{req?.title ?? ''}</DialogTitle>
+              <DialogDescription className="text-xs leading-relaxed whitespace-pre-wrap">
+                {req?.message ?? ''}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
         </div>
-        <div className="confirm-content">
-          <div className="confirm-title">{req.title}</div>
-          <div className="confirm-message">{req.message}</div>
-        </div>
-        <div className="confirm-actions">
-          <button
-            className={`btn ghost ${focused === 'cancel' ? 'focused' : ''}`}
-            onClick={() => resolveConfirm(req.id, false)}
+        <DialogFooter className="mt-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={focused === 'cancel' ? 'ring-2 ring-ring/50' : ''}
+            onClick={() => req && resolveConfirm(req.id, false)}
           >
-            {req.cancelText ?? '取消'}
-          </button>
-          <button
-            className={`btn ${req.danger ? 'danger' : 'primary'} ${focused === 'ok' ? 'focused' : ''}`}
-            onClick={() => resolveConfirm(req.id, true)}
+            {req?.cancelText ?? '取消'}
+          </Button>
+          <Button
+            variant={req?.danger ? 'destructive' : 'default'}
+            size="sm"
+            className={focused === 'ok' ? 'ring-2 ring-ring/50' : ''}
+            onClick={() => req && resolveConfirm(req.id, true)}
           >
-            {req.confirmText ?? '确认'}
-          </button>
-        </div>
-      </div>
-    </div>
+            {req?.confirmText ?? '确认'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

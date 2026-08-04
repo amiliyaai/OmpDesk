@@ -63,9 +63,9 @@ check('方案表单打开', true)
 await win.click('.form-actions .btn.ghost') // 取消
 await win.waitForTimeout(300)
 
-// 关闭设置
-await win.click('.modal-head .icon-btn')
-await win.waitForTimeout(300)
+// 关闭设置(Esc)
+await win.keyboard.press('Escape')
+await win.waitForTimeout(400)
 check('设置关闭', (await win.locator('.modal').count()) === 0)
 
 // ---------- 命令面板 ----------
