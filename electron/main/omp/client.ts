@@ -201,7 +201,8 @@ export class OmpClient extends EventEmitter {
   }
 
   async getAvailableModels(): Promise<unknown> {
-    return this.request('get_available_models', {}, 15_000)
+    // 冷启动时模型目录扫描可能较慢, 超时给足
+    return this.request('get_available_models', {}, 60_000)
   }
 
   prompt(message: string, images?: string[]): Promise<unknown> {

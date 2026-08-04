@@ -31,7 +31,15 @@ export function ModelPicker() {
 
   return (
     <div className="model-picker" ref={ref}>
-      <button className="model-picker-btn" onClick={() => setOpen((v) => !v)} title="切换模型 (运行时生效)">
+      <button
+        className="model-picker-btn"
+        onClick={() => {
+          // 打开时若模型列表为空(进程池未启动)则懒加载
+          if (models.length === 0) void loadModels()
+          setOpen((v) => !v)
+        }}
+        title="切换模型 (运行时生效)"
+      >
         <span className="model-current">{current || '默认模型'}</span>
         <ChevronDown size={13} />
       </button>

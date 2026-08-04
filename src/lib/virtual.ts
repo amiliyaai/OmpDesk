@@ -7,11 +7,6 @@ export interface VirtualItem<T> {
   height: number
 }
 
-interface Options {
-  overscan?: number
-  estimateHeight?: (item: unknown, index: number) => number
-}
-
 export interface VirtualList<T> {
   containerRef: React.RefObject<HTMLDivElement | null>
   innerRef: React.RefObject<HTMLDivElement | null>
@@ -23,9 +18,15 @@ export interface VirtualList<T> {
   measure: (index: number, el: HTMLDivElement | null) => void
 }
 
+interface Options {
+  overscan?: number
+  estimateHeight?: (item: unknown, index: number) => number
+}
+
 /**
  * 虚拟滚动列表(动态高度, ResizeObserver 实测 + 估算兜底)
- * 用于长对话消息流,避免数百条消息全部渲染
+ * - offsets 在渲染期直接计算(与状态永远同步, 无 effect 时序问题)
+ * - measure 用 rAF 节流合并, 实测高度后触发一次重渲染
  */
 export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T> {
   const { overscan = 8, estimateHeight } = opts
@@ -33,8 +34,11 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
   const innerRef = useRef<HTMLDivElement | null>(null)
   const [scrollTop, setScrollTop] = useState(0)
   const [viewportH, setViewportH] = useState(0)
+  const [version, setVersion] = useState(0)
   const heights = useRef<Map<number, number>>(new Map())
   const nearBottom = useRef(true)
+  const measurePending = useRef<Set<number>>(new Set())
+  const rafRef = useRef<number | null>(null)
 
   // 容器尺寸 + 滚动监听
   useLayoutEffect(() => {
@@ -56,6 +60,7 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
     return () => {
       ro.disconnect()
       el.removeEventListener('scroll', onScroll)
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
     }
   }, [])
 
@@ -68,51 +73,46 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
     return est
   }
 
-  // 偏移前缀和(增量计算, 长列表 O(n))
-  const offsets = useRef<number[]>([])
-  useLayoutEffect(() => {
-    offsets.current = []
+  // 偏移前缀和 —— 渲染期直接计算, 与 items 永远一致
+  const offsets: number[] = []
+  {
     let acc = 0
     for (let i = 0; i < items.length; i++) {
-      offsets.current.push(acc)
+      offsets.push(acc)
       acc += heightOf(i)
     }
-    // 清理超出范围的缓存(防泄漏)
-    if (heights.current.size > items.length * 2) {
-      const keep = new Map<number, number>()
-      for (let i = 0; i < items.length; i++) {
-        const h = heights.current.get(i)
-        if (h) keep.set(i, h)
-      }
-      heights.current = keep
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length, items])
+  }
 
-  const totalHeight = offsets.current.length ? offsets.current[offsets.current.length - 1] + heightOf(items.length - 1) : 0
+  const totalHeight = offsets.length ? offsets[offsets.length - 1] + heightOf(items.length - 1) : 0
 
   // 可视窗口
-  const start = Math.max(0, (() => {
-    let lo = 0
-    let hi = items.length - 1
-    if (hi < 0) return 0
-    while (lo < hi) {
-      const mid = (lo + hi) >> 1
-      if (offsets.current[mid] + heightOf(mid) < scrollTop) lo = mid + 1
-      else hi = mid
-    }
-    return lo
-  })() - overscan)
-  const end = Math.min(items.length, (() => {
-    const bottom = scrollTop + viewportH
-    let i = start
-    while (i < items.length && offsets.current[i] < bottom) i++
-    return i
-  })() + overscan)
+  const start = Math.max(
+    0,
+    (() => {
+      let lo = 0
+      let hi = items.length - 1
+      if (hi < 0) return 0
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1
+        if (offsets[mid] + heightOf(mid) < scrollTop) lo = mid + 1
+        else hi = mid
+      }
+      return lo
+    })() - overscan
+  )
+  const end = Math.min(
+    items.length,
+    (() => {
+      const bottom = scrollTop + viewportH
+      let i = start
+      while (i < items.length && offsets[i] < bottom) i++
+      return i
+    })() + overscan
+  )
 
   const visible: Array<VirtualItem<T>> = []
   for (let i = start; i < end; i++) {
-    visible.push({ item: items[i], index: i, offset: offsets.current[i], height: heightOf(i) })
+    visible.push({ item: items[i], index: i, offset: offsets[i], height: heightOf(i) })
   }
 
   // 滚动到最底部
@@ -123,14 +123,25 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
     nearBottom.current = true
   }
 
-  // 记录实测高度
+  // 记录实测高度(rAF 节流合并, 触发一次重渲染)
   const measure = (index: number, el: HTMLDivElement | null): void => {
     if (!el) return
     const h = el.getBoundingClientRect().height
-    if (h > 0 && Math.abs((heights.current.get(index) ?? 0) - h) > 1) {
-      heights.current.set(index, h)
-    }
+    if (h <= 0 || Math.abs((heights.current.get(index) ?? 0) - h) <= 1) return
+    heights.current.set(index, h)
+    measurePending.current.add(index)
+    if (rafRef.current !== null) return
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null
+      if (measurePending.current.size > 0) {
+        measurePending.current.clear()
+        setVersion((v) => v + 1)
+      }
+    })
   }
+
+  void version
+  void innerRef
 
   return {
     containerRef,

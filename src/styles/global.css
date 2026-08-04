@@ -217,6 +217,7 @@ textarea { resize: none; }
 .chat-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
 .chat-scroll { flex: 1; overflow-y: auto; scroll-behavior: auto; position: relative; }
+.chat-empty-inner { height: 100%; display: flex; }
 .chat-inner { width: 100%; }
 .vrow { position: absolute; left: 0; right: 0; padding: 6px 22px; will-change: transform; }
 .live-row { position: relative; }
