@@ -1,6 +1,6 @@
-# OmpDesk
+# OmpDesk — oh-my-pi (omp) 终端 AI 编程助手的桌面 GUI 客户端
 
-**oh-my-pi (omp) 的桌面 GUI 客户端 —— 给终端 AI 编程助手一个 Claude Desktop 式的家。**
+**给终端 AI 编程助手一个 Claude Desktop 式的家 —— 驱动真实 omp,非模拟、非套壳。**
 
 ![Electron](https://img.shields.io/badge/Electron-43-blue) ![React](https://img.shields.io/badge/React-19-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-7-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
@@ -24,13 +24,37 @@ OmpDesk 通过 RPC 接口(`omp --mode rpc-ui`)驱动真实的 omp CLI —— 非
 - **三平台**:Windows / macOS / Linux 代码平台无关 + electron-builder 打包配置
 - **性能**:长对话虚拟滚动(仅渲染可视区 + 实测高度)、增量合帧渲染、会话列表轻读(只读文件首尾)、进程池上限
 
+## 为什么选择 OmpDesk
+
+终端 AI 编程助手([oh-my-pi (omp)](https://omp.sh/)、Claude Code、Codex)能力强大,但只能活在终端里。OmpDesk 通过 RPC 接口(`omp --mode rpc-ui`)驱动真实的 omp CLI,把它变成 Claude Desktop 式的桌面应用:流式聊天、工具调用卡片、MCP 与 Skills 管理、模型方案一键快切、会话历史检索/恢复/导出——开源免费(MIT),支持 Windows / macOS / Linux。
+
 ## 截图
 
 | 聊天 & 流式 | 工具 & thinking | 会话恢复 |
 | --- | --- | --- |
-| ![chat](shots/chat.png) | ![tools](shots/tools.png) | ![resume](shots/resume-history.png) |
+| ![OmpDesk 聊天视图与流式 AI 回复](shots/chat.png) | ![OmpDesk 工具调用卡片与 thinking 折叠块](shots/tools.png) | ![OmpDesk 会话历史恢复与续聊](shots/resume-history.png) |
 
-更多:[streaming](shots/streaming.png) · [model picker](shots/model-picker.png) · [command palette](shots/palette.png) · [settings](shots/settings-models.png)
+更多:[流式输出](shots/streaming.png) · [模型选择器(方案一键快切)](shots/model-picker.png) · [命令面板](shots/palette.png) · [模型服务设置](shots/settings-models.png)
+
+## 常见问题
+
+**OmpDesk 免费吗?**
+是的——MIT 开源,免费使用、修改与分发;你只需承担 omp 配置中 AI API 的实际用量费用。
+
+**支持 Windows / macOS / Linux 吗?**
+支持。提供 Windows(NSIS)、macOS(universal DMG)与 Linux(AppImage + deb)原生安装包,各平台均支持应用内自动更新。
+
+**必须安装 omp CLI 吗?**
+必须。OmpDesk 通过 RPC 接口驱动真实的 [oh-my-pi (omp)](https://omp.sh/) CLI,运行时自动探测 `PATH` 与各平台常见安装位置。
+
+**数据存在本地吗?**
+存在本地。会话直接复用 omp 的 `~/.omp/agent/sessions/`(JSONL),不复制数据;API Key 经 Electron safeStorage 加密存储。
+
+**可以用自己的 API Key 吗?**
+可以。在 设置 → 模型服务 中配置供应商、API Key 与模型角色映射方案,运行时一键快切模型。
+
+**如何更新?**
+打包版启动后自动检查 GitHub Releases;新版本就绪时弹出系统通知与一键"重启安装"横幅。
 
 ## 环境要求
 

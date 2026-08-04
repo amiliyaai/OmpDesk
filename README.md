@@ -1,6 +1,6 @@
-# OmpDesk
+# OmpDesk — Desktop GUI for the oh-my-pi (omp) Terminal AI Coding Agent
 
-**A desktop GUI client for [oh-my-pi (omp)](https://omp.sh/) — the terminal AI coding agent, with a Claude-Desktop-style home.**
+**A Claude-Desktop-style home for the [oh-my-pi (omp)](https://omp.sh/) terminal AI coding agent.**
 
 ![Electron](https://img.shields.io/badge/Electron-43-blue) ![React](https://img.shields.io/badge/React-19-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-7-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
 
@@ -24,13 +24,37 @@ OmpDesk talks to the real `omp` CLI over its RPC interface (`omp --mode rpc-ui`)
 - **Three platforms** — platform-agnostic code plus electron-builder packaging config for Windows / macOS / Linux.
 - **Performance** — virtual scrolling for long conversations (renders only the visible window with measured heights), incremental batched rendering, lightweight session-list reads (only file head/tail), bounded process pool.
 
+## Why OmpDesk?
+
+Terminal AI coding agents — [oh-my-pi (omp)](https://omp.sh/), Claude Code, Codex — are powerful, but they live in the terminal. OmpDesk gives them a Claude-Desktop-style desktop home: it drives the real `omp` CLI over its RPC interface (`omp --mode rpc-ui`) — no mocks, no wrappers around another GUI — with streaming chat, tool-call cards, MCP & Skills management, model profiles and session history all built in. Free and open source (MIT), for Windows, macOS and Linux.
+
 ## Screenshots
 
 | Chat & streaming | Tools & thinking | Session resume |
 | --- | --- | --- |
-| ![chat](shots/chat.png) | ![tools](shots/tools.png) | ![resume](shots/resume-history.png) |
+| ![OmpDesk chat view with streaming AI responses](shots/chat.png) | ![OmpDesk tool call cards and collapsible thinking blocks](shots/tools.png) | ![OmpDesk session history with resume and follow-up](shots/resume-history.png) |
 
-More: [streaming](shots/streaming.png) · [model picker](shots/model-picker.png) · [command palette](shots/palette.png) · [settings](shots/settings-models.png)
+More: [streaming output](shots/streaming.png) · [model picker with profile hot-switch](shots/model-picker.png) · [command palette](shots/palette.png) · [model service settings](shots/settings-models.png)
+
+## FAQ
+
+**Is OmpDesk free?**
+Yes — OmpDesk is open source under the MIT license, free to use, modify and redistribute. You only pay for the AI API usage of your own omp configuration.
+
+**Does OmpDesk work on Windows, macOS and Linux?**
+Yes. Native installers are provided for Windows (NSIS), macOS (universal DMG) and Linux (AppImage + deb), with in-app auto-updates on every platform.
+
+**Do I need the omp CLI installed?**
+Yes — OmpDesk drives the real [oh-my-pi (omp)](https://omp.sh/) CLI over its RPC interface. The binary is auto-detected via `PATH`, then common per-platform install locations.
+
+**Is my data stored locally?**
+Yes. Sessions live in omp's own `~/.omp/agent/sessions/` (JSONL) — OmpDesk reads them directly without duplicating data, and API keys are encrypted with Electron `safeStorage`.
+
+**Can I use my own API key?**
+Yes — configure your provider, API key and model role mapping in profiles (Settings → Model Service), and hot-switch models at runtime with one click.
+
+**How do I update OmpDesk?**
+Packaged builds check GitHub Releases automatically after launch — you get a system notification and a one-click *Restart & Install* banner when a new version is ready.
 
 ## Requirements
 

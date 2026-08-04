@@ -300,6 +300,8 @@ export interface OmpApi {
   quit(): Promise<void>
   /** 弹出"关于"对话框(主进程) */
   showAbout(): Promise<void>
+  /** 应用版本号(设置→关于) */
+  getVersion(): Promise<string>
   checkForUpdates(): Promise<void>
   quitAndInstall(): Promise<void>
   onEvent(cb: (e: MainEvent) => void): () => void

@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import {
-  Boxes,
   Check,
   ChevronRight,
   Database,
   FolderOpen,
+  Gauge,
+  Info,
   Palette,
+  Plug,
   Plus,
   Server,
+  SlidersHorizontal,
   Sparkles,
   Trash2
 } from 'lucide-react'
@@ -161,17 +164,35 @@ function McpForm({ editing, onClose }: { editing: { name: string; server: McpSer
   )
 }
 
-// ---------- 设置弹窗主体 ----------
+// ---------- 设置弹窗主体(Codex 式分组导航) ----------
 
-const TABS = [
-  { id: 'models', labelKey: 'settings.tabModels', icon: Sparkles },
-  { id: 'mcp', labelKey: 'settings.tabMcp', icon: Server },
-  { id: 'skills', labelKey: 'settings.tabSkills', icon: Boxes },
-  { id: 'appearance', labelKey: 'settings.tabAppearance', icon: Palette },
-  { id: 'data', labelKey: 'settings.tabData', icon: Database }
+const SECTIONS = [
+  {
+    titleKey: 'settings.sectionPersonal',
+    tabs: [
+      { id: 'general', labelKey: 'settings.tabGeneral', icon: SlidersHorizontal },
+      { id: 'appearance', labelKey: 'settings.tabAppearance', icon: Palette }
+    ]
+  },
+  {
+    titleKey: 'settings.sectionAgent',
+    tabs: [
+      { id: 'models', labelKey: 'settings.tabModels', icon: Sparkles },
+      { id: 'integrations', labelKey: 'settings.tabIntegrations', icon: Plug }
+    ]
+  },
+  {
+    titleKey: 'settings.sectionSystem',
+    tabs: [
+      { id: 'data', labelKey: 'settings.tabData', icon: Database },
+      { id: 'usage', labelKey: 'settings.tabUsage', icon: Gauge },
+      { id: 'backend', labelKey: 'settings.tabBackend', icon: Server },
+      { id: 'about', labelKey: 'settings.tabAbout', icon: Info }
+    ]
+  }
 ] as const
 
-type TabId = (typeof TABS)[number]['id']
+type TabId = (typeof SECTIONS)[number]['tabs'][number]['id']
 
 export function SettingsModal() {
   const { t } = useI18n()
@@ -195,7 +216,7 @@ export function SettingsModal() {
   const toggleSkill = useStore((s) => s.toggleSkill)
   const addNotice = useStore((s) => s.addNotice)
   const confirm = useStore((s) => s.confirm)
-  const [tab, setTab] = useState<TabId>('models')
+  const [tab, setTab] = useState<TabId>('general')
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [showMcpForm, setShowMcpForm] = useState(false)
   const [editingMcp, setEditingMcp] = useState<{ name: string; server: McpServerDraft } | null>(null)
@@ -204,6 +225,7 @@ export function SettingsModal() {
   const [logs, setLogs] = useState<string[]>([])
   const [showLogs, setShowLogs] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [appVersion, setAppVersion] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -213,6 +235,7 @@ export function SettingsModal() {
       void refreshSkills()
       setWorkspace(settings?.defaultWorkspace ?? '')
       setHotkey(settings?.hotkey ?? '')
+      void window.omp.getVersion().then(setAppVersion)
     }
   }, [open, settings?.defaultWorkspace, settings?.hotkey, refreshProviders, refreshProfiles, refreshMcp, refreshSkills])
 
@@ -225,24 +248,100 @@ export function SettingsModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="modal max-w-[860px] p-0" showClose>
+      <DialogContent className="modal max-w-[900px] p-0" showClose>
         <div className="modal-head">
           <h2>{t('settings.title')}</h2>
         </div>
         <div className="modal-body">
           <nav className="settings-nav">
-            {TABS.map((tb) => {
-              const Icon = tb.icon
-              return (
-                <button key={tb.id} className={`settings-tab ${tab === tb.id ? 'active' : ''}`} onClick={() => setTab(tb.id)}>
-                  <Icon size={14} />
-                  {t(tb.labelKey)}
-                </button>
-              )
-            })}
+            {SECTIONS.map((sec) => (
+              <div className="settings-nav-group" key={sec.titleKey}>
+                <div className="settings-nav-title">{t(sec.titleKey)}</div>
+                {sec.tabs.map((tb) => {
+                  const Icon = tb.icon
+                  return (
+                    <button
+                      key={tb.id}
+                      className={`settings-tab ${tab === tb.id ? 'active' : ''}`}
+                      onClick={() => setTab(tb.id)}
+                    >
+                      <Icon size={14} />
+                      {t(tb.labelKey)}
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
           </nav>
 
           <div className="settings-content">
+            {tab === 'general' && (
+              <div className="settings-section">
+                <div className="section-title">{t('settings.language')}</div>
+                <FieldSelect
+                  value={settings.language ?? 'zh-CN'}
+                  onChange={(v) => { void setSettings({ language: v as Language }); flashSaved() }}
+                  options={[
+                    { value: 'zh-CN', label: '简体中文' },
+                    { value: 'en', label: 'English' },
+                    { value: 'ja', label: '日本語' }
+                  ]}
+                />
+                <div className="section-title">{t('settings.defaultWorkspace')}</div>
+                <div className="workspace-row">
+                  <input value={workspace} onChange={(e) => setWorkspace(e.target.value)} placeholder="C:\path\to\project" />
+                  <button
+                    className="btn ghost small"
+                    title={t('common.browse')}
+                    onClick={() => {
+                      void window.omp.pickDirectory().then((p) => {
+                        if (p) setWorkspace(p)
+                      })
+                    }}
+                  >
+                    <FolderOpen size={13} /> {t('common.browse')}
+                  </button>
+                </div>
+                <div className="form-actions inline">
+                  <button className="btn small primary" onClick={() => { void setSettings({ defaultWorkspace: workspace }); flashSaved() }}>
+                    {saved ? <Check size={13} /> : t('common.save')}
+                  </button>
+                </div>
+                <div className="section-title">{t('settings.hotkey')}</div>
+                <input value={hotkey} onChange={(e) => setHotkey(e.target.value)} placeholder="CommandOrControl+Shift+Space" />
+                <div className="form-actions inline">
+                  <button className="btn small primary" onClick={() => { void setSettings({ hotkey }); flashSaved() }}>
+                    {saved ? <Check size={13} /> : t('common.save')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {tab === 'appearance' && (
+              <div className="settings-section">
+                <div className="section-title">{t('settings.theme')}</div>
+                <FieldSelect
+                  value={settings.theme}
+                  onChange={(v) => { void setSettings({ theme: v as typeof settings.theme }); flashSaved() }}
+                  options={[
+                    { value: 'system', label: t('settings.themeSystem') },
+                    { value: 'dark', label: t('settings.themeDark') },
+                    { value: 'light', label: t('settings.themeLight') }
+                  ]}
+                />
+                <div className="section-title">{t('settings.fontSize')}</div>
+                <input
+                  type="range"
+                  min={0.85}
+                  max={1.25}
+                  step={0.05}
+                  value={settings.fontScale}
+                  onChange={(e) => void setSettings({ fontScale: Number(e.target.value) })}
+                />
+                <div className="section-hint">{Math.round(settings.fontScale * 100)}%</div>
+              </div>
+            )}
+
             {tab === 'models' && (
               <div className="settings-section">
                 <div className="section-title">{t('settings.approvalMode')}</div>
@@ -305,7 +404,7 @@ export function SettingsModal() {
               </div>
             )}
 
-            {tab === 'mcp' && (
+            {tab === 'integrations' && (
               <div className="settings-section">
                 <div className="section-title">{t('settings.mcpServers')}</div>
                 <div className="section-hint">{t('settings.mcpHint')}</div>
@@ -339,11 +438,7 @@ export function SettingsModal() {
                     <Plus size={13} /> {t('settings.addServer')}
                   </button>
                 )}
-              </div>
-            )}
 
-            {tab === 'skills' && (
-              <div className="settings-section">
                 <div className="section-title">{t('settings.skillsTitle')}</div>
                 <div className="section-hint">{t('settings.skillsHint')}</div>
                 {skills.map((s) => (
@@ -363,70 +458,8 @@ export function SettingsModal() {
               </div>
             )}
 
-            {tab === 'appearance' && (
-              <div className="settings-section">
-                <div className="section-title">{t('settings.language')}</div>
-                <FieldSelect
-                  value={settings.language ?? 'zh-CN'}
-                  onChange={(v) => { void setSettings({ language: v as Language }); flashSaved() }}
-                  options={[
-                    { value: 'zh-CN', label: '简体中文' },
-                    { value: 'en', label: 'English' },
-                    { value: 'ja', label: '日本語' }
-                  ]}
-                />
-                <div className="section-title">{t('settings.theme')}</div>
-                <FieldSelect
-                  value={settings.theme}
-                  onChange={(v) => { void setSettings({ theme: v as typeof settings.theme }); flashSaved() }}
-                  options={[
-                    { value: 'system', label: t('settings.themeSystem') },
-                    { value: 'dark', label: t('settings.themeDark') },
-                    { value: 'light', label: t('settings.themeLight') }
-                  ]}
-                />
-                <div className="section-title">{t('settings.fontSize')}</div>
-                <input
-                  type="range"
-                  min={0.85}
-                  max={1.25}
-                  step={0.05}
-                  value={settings.fontScale}
-                  onChange={(e) => void setSettings({ fontScale: Number(e.target.value) })}
-                />
-                <div className="section-hint">{Math.round(settings.fontScale * 100)}%</div>
-              </div>
-            )}
-
             {tab === 'data' && (
               <div className="settings-section">
-                <div className="section-title">{t('settings.defaultWorkspace')}</div>
-                <div className="workspace-row">
-                  <input value={workspace} onChange={(e) => setWorkspace(e.target.value)} placeholder="C:\path\to\project" />
-                  <button
-                    className="btn ghost small"
-                    title={t('common.browse')}
-                    onClick={() => {
-                      void window.omp.pickDirectory().then((p) => {
-                        if (p) setWorkspace(p)
-                      })
-                    }}
-                  >
-                    <FolderOpen size={13} /> {t('common.browse')}
-                  </button>
-                </div>
-                <div className="form-actions inline">
-                  <button className="btn small primary" onClick={() => { void setSettings({ defaultWorkspace: workspace }); flashSaved() }}>
-                    {saved ? <Check size={13} /> : t('common.save')}
-                  </button>
-                </div>
-                <div className="section-title">{t('settings.hotkey')}</div>
-                <input value={hotkey} onChange={(e) => setHotkey(e.target.value)} placeholder="CommandOrControl+Shift+Space" />
-                <div className="form-actions inline">
-                  <button className="btn small primary" onClick={() => { void setSettings({ hotkey }); flashSaved() }}>
-                    {saved ? <Check size={13} /> : t('common.save')}
-                  </button>
-                </div>
                 <div className="section-title">{t('settings.sessionProcess')}</div>
                 <div className="section-hint">
                   {t('settings.sessionProcessHint', { max: settings.maxPoolProcesses, min: settings.idleKillMinutes })}
@@ -446,8 +479,32 @@ export function SettingsModal() {
                     {logs.map((l, i) => <div key={i} className="log-line">{l}</div>)}
                   </div>
                 )}
-                <div className="section-title">{t('settings.about')}</div>
-                <div className="section-hint">{t('settings.aboutHint', { version: '0.1.0' })}</div>
+              </div>
+            )}
+
+            {tab === 'usage' && (
+              <div className="settings-section">
+                <div className="section-hint">{t('settings.usagePlaceholder')}</div>
+              </div>
+            )}
+
+            {tab === 'backend' && (
+              <div className="settings-section">
+                <div className="section-hint">{t('settings.backendPlaceholder')}</div>
+              </div>
+            )}
+
+            {tab === 'about' && (
+              <div className="settings-section">
+                <div className="section-title">OmpDesk</div>
+                <div className="section-hint">{t('settings.aboutHint', { version: appVersion })}</div>
+                <div className="section-hint">{t('settings.aboutCopyright')}</div>
+                <div className="section-hint">{t('settings.aboutRepo')}</div>
+                <div className="form-actions">
+                  <button className="btn ghost small" onClick={() => void window.omp.showAbout()}>
+                    {t('menubar.about')}
+                  </button>
+                </div>
               </div>
             )}
           </div>

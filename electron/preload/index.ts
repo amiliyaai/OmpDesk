@@ -49,6 +49,7 @@ const api: OmpApi = {
   toggleFullScreen: () => ipcRenderer.invoke('window:toggleFullScreen'),
   quit: () => ipcRenderer.invoke('app:quit'),
   showAbout: () => ipcRenderer.invoke('app:showAbout'),
+  getVersion: () => ipcRenderer.invoke('app:getVersion'),
   checkForUpdates: () => ipcRenderer.invoke('updater:check'),
   quitAndInstall: () => ipcRenderer.invoke('updater:quitAndInstall'),
   onEvent: (cb: (e: MainEvent) => void) => {

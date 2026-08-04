@@ -211,6 +211,7 @@ function registerWindowIpc(): void {
     app.quit()
   })
   ipcMain.handle('app:showAbout', () => showAboutDialog())
+  ipcMain.handle('app:getVersion', () => app.getVersion())
 }
 
 /** 关闭到托盘的首开提示(仅一次) */
