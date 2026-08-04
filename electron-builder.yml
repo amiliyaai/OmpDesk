@@ -1,0 +1,43 @@
+# 三平台打包配置 (electron-builder)
+appId: ai.amiliyaai.ompdesk
+productName: OmpDesk
+directories:
+  output: release
+  buildResources: resources
+files:
+  - out/**
+  - resources/**
+  - package.json
+extraResources:
+  - from: resources/icon.png
+    to: resources/icon.png
+asar: true
+
+win:
+  target:
+    - nsis
+  icon: resources/icon.ico
+  artifactName: OmpDesk-${version}-win-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: OmpDesk
+
+mac:
+  target:
+    - dmg
+  icon: resources/icon.png
+  category: public.app-category.developer-tools
+  artifactName: OmpDesk-${version}-mac-${arch}.${ext}
+dmg:
+  title: OmpDesk ${version}
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: resources/icon.png
+  category: Development
+  artifactName: OmpDesk-${version}-linux-${arch}.${ext}
+
+# 图标注: mac/linux 正式打包建议替换为 1024x1024 icns/png

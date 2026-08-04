@@ -101,6 +101,12 @@ export type UiResponsePayload =
   | { confirmed: boolean }
   | { cancelled: boolean }
 
+export interface ProfilesData {
+  profiles: OmpProfile[]
+  currentRoles: RoleModels
+  currentApprovalMode: ApprovalMode | ''
+}
+
 // ---------- 模型 ----------
 
 export interface ModelInfo {
@@ -243,14 +249,14 @@ export interface OmpApi {
   exportSession(filePath: string): Promise<{ ok: boolean; path?: string; error?: string }>
   newSession(workspace: string): Promise<{ ok: boolean; error?: string }>
   openSession(filePath: string): Promise<{ ok: boolean; cwd?: string; error?: string }>
-  sendPrompt(text: string, images?: string[]): Promise<void>
+  sendPrompt(text: string, images?: string[]): Promise<{ ok: boolean; error?: string }>
   abort(): Promise<void>
   getModels(): Promise<ModelInfo[]>
   setModel(provider: string, modelId: string): Promise<{ ok: boolean; error?: string }>
   getSettings(): Promise<AppSettings>
   setSettings(patch: Partial<AppSettings>): Promise<AppSettings>
   getProviders(): Promise<ProviderSummary[]>
-  getProfiles(): Promise<OmpProfile[]>
+  getProfiles(): Promise<ProfilesData>
   saveProfile(
     p: Omit<OmpProfile, 'id' | 'createdAt' | 'updatedAt'> & { apiKey?: string }
   ): Promise<{ ok: boolean; error?: string }>
