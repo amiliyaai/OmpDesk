@@ -184,10 +184,7 @@ export const useStore = create<State>((set, get) => ({
       get().addNotice('error', '无法解析会话文件')
       return
     }
-    const res = await window.omp.openSession(filePath)
-    if (!res.ok) {
-      get().addNotice('warn', `切换会话失败: ${res.error}(仅展示历史)`)
-    }
+    // 先展示本地解析的历史(即时), 后台切换 RPC 会话(可能需启动进程, 数秒)
     set({
       chat: {
         messages: detail.messages,
@@ -195,12 +192,16 @@ export const useStore = create<State>((set, get) => ({
         status: 'idle',
         errorText: null,
         currentFile: filePath,
-        cwd: detail.meta.workspace || res.cwd || get().settings?.defaultWorkspace || '',
+        cwd: detail.meta.workspace || get().settings?.defaultWorkspace || '',
         model: detail.meta.model ?? null
       },
       todos: [],
       uiRequests: []
     })
+    const res = await window.omp.openSession(filePath)
+    if (!res.ok) {
+      get().addNotice('warn', `切换会话失败: ${res.error}(仅展示历史, 发送消息将新建会话)`)
+    }
   },
 
   send: async (text, images) => {
