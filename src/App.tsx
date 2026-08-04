@@ -45,6 +45,7 @@ export default function App() {
         theme === 'dark' ||
         (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
       document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      document.documentElement.classList.toggle('dark', dark)
       document.documentElement.style.fontSize = `${(settings?.fontScale ?? 1) * 14}px`
     }
     apply()
