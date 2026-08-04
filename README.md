@@ -147,3 +147,9 @@ Step-by-step instructions, verification checklist and troubleshooting: **[RELEAS
 ## License
 
 MIT — © amiliyaai
+
+## UI/UX(v0.3)
+
+- **设计系统**:Tailwind v4 + shadcn 风格 token(融合 Linear 克制布局与 Claude 暖中性亲和),深浅双主题
+- **组件**:Radix 原语(Dialog / DropdownMenu / Popover / Select / Switch)+ sonner toast + 定制样式
+- **克制动效**:按钮渐变光效、输入聚焦光晕、工具卡片呼吸边框、thinking 展开过渡、弹窗入场动画;遵循 `prefers-reduced-motion` 降级

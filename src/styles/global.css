@@ -795,3 +795,128 @@ textarea { resize: none; }
 
 /* 右键菜单时强制显示操作区(Radix 定位依赖可见 trigger) */
 .session-item.ctx .session-actions { display: flex; }
+
+/* ============ v0.3 视觉打磨(Linear 克制 + Claude 亲和 + Magic UI 式光效) ============ */
+
+/* 主按钮: 渐变 + 内高光 + 悬停光晕微移 */
+.btn.primary {
+  background: linear-gradient(135deg, var(--primary), color-mix(in oklch, var(--primary) 72%, #8b5cf6));
+  box-shadow:
+    inset 0 1px 0 oklch(1 1 1 / 0.14),
+    0 1px 2px oklch(0 0 0 / 0.2);
+  transition: transform 0.15s var(--ease), box-shadow 0.2s var(--ease), filter 0.15s;
+}
+.btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 oklch(1 1 1 / 0.14),
+    0 4px 16px color-mix(in oklch, var(--primary) 38%, transparent);
+}
+.btn.primary:active { transform: translateY(0); }
+
+/* 新对话按钮: 微光晕呼吸 */
+.btn.new-chat { position: relative; overflow: hidden; }
+.btn.new-chat::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, oklch(1 1 1 / 0.18) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.5s var(--ease);
+}
+.btn.new-chat:hover::after { transform: translateX(100%); }
+
+/* 用户气泡: 渐变 + 轻投影 */
+.bubble.user {
+  background: linear-gradient(135deg, var(--primary), color-mix(in oklch, var(--primary) 78%, #7c6cff));
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.22);
+}
+
+/* 工具卡片: 运行中边框呼吸 */
+.toolcard.running { border-color: color-mix(in oklch, var(--amber) 55%, transparent); }
+.toolcard.running .toolcard-head { background: color-mix(in oklch, var(--amber) 5%, transparent); }
+
+/* thinking 展开过渡 */
+.thinking-body { animation: fade-slide 0.18s var(--ease); }
+@keyframes fade-slide {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 侧边栏选中态: 左侧指示条 */
+.session-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 22%; bottom: 22%;
+  width: 2.5px; border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 6px color-mix(in oklch, var(--accent) 60%, transparent);
+}
+.session-item:hover .session-title { color: var(--text); }
+
+/* Composer 聚焦光晕 */
+.composer { transition: border-color 0.15s, box-shadow 0.15s; }
+.composer:focus-within {
+  border-color: color-mix(in oklch, var(--primary) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 14%, transparent);
+}
+
+/* 空状态 logo 光晕 */
+.empty-logo {
+  background:
+    radial-gradient(60% 60% at 50% 40%, oklch(0.35 0.12 285 / 0.9), transparent),
+    linear-gradient(135deg, #2a2a3a, #1c1c28);
+  box-shadow:
+    0 0 44px color-mix(in oklch, var(--primary) 22%, transparent),
+    0 8px 30px oklch(0 0 0 / 0.35);
+}
+
+/* 状态栏执行徽标胶囊 */
+.statusbar-item.exec {
+  background: color-mix(in oklch, var(--amber) 12%, transparent);
+  border-radius: 20px; padding: 1px 10px;
+}
+
+/* 列表行 hover 微移 */
+.list-row { transition: border-color 0.15s, background 0.15s; }
+.list-row:hover { border-color: color-mix(in oklch, var(--primary) 30%, transparent); }
+
+/* 模态入场已被 Dialog data-state 动画接管; 弹窗阴影细化 */
+.modal, .confirm-dialog {
+  box-shadow:
+    0 24px 80px oklch(0 0 0 / 0.45),
+    0 2px 8px oklch(0 0 0 / 0.2);
+}
+
+/* 无障碍: 系统偏好减弱动效时降级 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============ v0.3 精修(Codex 视觉反馈) ============ */
+
+/* 辅助文字对比度提升 */
+:root { --text-faint: color-mix(in oklch, var(--muted-foreground) 78%, transparent); }
+
+/* 状态栏弱化: 更轻层级 */
+.statusbar {
+  background: transparent;
+  border-top-color: color-mix(in oklch, var(--border) 60%, transparent);
+  min-height: 26px;
+}
+.statusbar-item.chip { background: color-mix(in oklch, var(--muted) 60%, transparent); }
+
+/* 主按钮顶部高光加强(克制) */
+.btn.primary { box-shadow: inset 0 1px 0 oklch(1 1 1 / 0.22), 0 1px 2px oklch(0 0 0 / 0.2); }
+
+/* Composer 背景与边框更柔和 */
+.composer { background: color-mix(in oklch, var(--muted) 55%, transparent); }
+
+/* 空状态: 收紧留白, 最近会话上移 */
+.empty-state { gap: 10px; }
+.empty-recents { margin-top: 18px; }
+.empty-hint { margin-top: 18px; }
+
+/* 侧边栏分组标题弱化但可读 */
+.session-group-title { color: color-mix(in oklch, var(--muted-foreground) 85%, transparent); }
