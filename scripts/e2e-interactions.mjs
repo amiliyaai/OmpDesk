@@ -50,7 +50,7 @@ const beforeCount = await win.locator('.session-item').count()
 await item.click({ button: 'right' })
 await win.waitForSelector('.session-menu', { timeout: 3000 })
 check('右键菜单打开', true)
-await win.click('.session-menu button.danger')
+await win.click('.session-menu .danger')
 await win.waitForSelector('.confirm-dialog', { timeout: 3000 })
 check('自定义确认弹窗出现(非原生 confirm)', true)
 // Esc 取消 → 弹窗关闭, 会话仍在
@@ -61,7 +61,7 @@ check('会话未被删除', (await win.locator('.session-item').count()) === bef
 // 再触发一次: Enter 确认 → 删除该测试会话
 await item.click({ button: 'right' })
 await win.waitForSelector('.session-menu', { timeout: 3000 })
-await win.click('.session-menu button.danger')
+await win.click('.session-menu .danger')
 await win.waitForSelector('.confirm-dialog', { timeout: 3000 })
 await win.keyboard.press('Enter')
 await win.waitForTimeout(500)

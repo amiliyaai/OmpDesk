@@ -792,3 +792,6 @@ textarea { resize: none; }
 .codeblock-body { max-height: 480px; overflow-y: auto; }
 .md a { word-break: break-all; }
 .md .hljs { white-space: pre; }
+
+/* 右键菜单时强制显示操作区(Radix 定位依赖可见 trigger) */
+.session-item.ctx .session-actions { display: flex; }

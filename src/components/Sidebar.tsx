@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useStore } from '../store'
 import { relativeTime, shortPath } from '../lib/format'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 import type { SessionMeta } from '../shared/types'
 
 /** 会话列表项(悬停操作: 固定/重命名/导出/删除) */
@@ -27,6 +28,7 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
   const confirm = useStore((s) => s.confirm)
   const switching = useStore((s) => s.switching)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [ctxActive, setCtxActive] = useState(false) // 右键时强制显示操作区(否则 Radix 测量不到 trigger)
   const [renaming, setRenaming] = useState(false)
   const [title, setTitle] = useState(meta.title)
   const active = chat?.currentFile === meta.filePath
@@ -34,9 +36,10 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
 
   return (
     <div
-      className={`session-item ${active ? 'active' : ''} ${loading ? 'loading' : ''}`}
+      className={`session-item ${active ? 'active' : ''} ${loading ? 'loading' : ''} ${ctxActive ? 'ctx' : ''}`}
       onContextMenu={(e) => {
         e.preventDefault()
+        setCtxActive(true)
         setMenuOpen(true)
       }}
     >
@@ -83,18 +86,28 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
           <Pencil size={12} />
         </button>
         <div className="more-wrap">
-          <button className="icon-btn" title="更多" onClick={() => setMenuOpen((v) => !v)}>
-            <MoreHorizontal size={12} />
-          </button>
-          {menuOpen && (
-            <div className="session-menu" onMouseLeave={() => setMenuOpen(false)}>
-              <button onClick={() => { setMenuOpen(false); void exportSession(meta.filePath) }}>
-                <FileDown size={13} /> 导出 HTML
+          <DropdownMenu
+            open={menuOpen}
+            onOpenChange={(v) => {
+              setMenuOpen(v)
+              if (!v) setCtxActive(false)
+            }}
+          >
+            <DropdownMenuTrigger asChild>
+              <button className="icon-btn" title="更多" onClick={() => setMenuOpen((v) => !v)}>
+                <MoreHorizontal size={12} />
               </button>
-              <button
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="session-menu min-w-[150px] p-1" align="end">
+              <DropdownMenuItem
+                onSelect={() => void exportSession(meta.filePath)}
+              >
+                <FileDown size={13} /> 导出 HTML
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
                 className="danger"
-                onClick={() => {
-                  setMenuOpen(false)
+                onSelect={() =>
                   confirm({
                     title: '删除会话',
                     message: `删除「${meta.title || '无标题'}」?\n会话文件及其子会话将被移除, 无法恢复。`,
@@ -102,12 +115,12 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
                     danger: true,
                     onOk: () => void deleteSession(meta.filePath)
                   })
-                }}
+                }
               >
                 <Trash2 size={13} /> 删除
-              </button>
-            </div>
-          )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>
