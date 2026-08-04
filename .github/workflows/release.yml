@@ -64,7 +64,8 @@ jobs:
           key: ${{ runner.os }}-toolchain-${{ hashFiles('package-lock.json') }}
       - run: npm ci
       # universal = arm64 + x64 单包, latest-mac.yml 单份更新元数据
-      - run: npx electron-vite build && npx electron-builder --mac --universal
+      # --publish never: 发布统一由 release job 完成, 避免 tag 上 electron-builder 自动发布(无 GH_TOKEN 会失败)
+      - run: npx electron-vite build && npx electron-builder --mac --universal --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: artifacts-macos
