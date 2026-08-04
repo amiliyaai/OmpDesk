@@ -128,10 +128,7 @@ export const MessageBubble = memo(function MessageBubble({
             {msg.model && <span>{msg.model}</span>}
             {msg.usage && msg.usage.input > 0 && (
               <span>
-                {t('chat.tokens', {
-                  in: Math.round(msg.usage.input / 1000),
-                  out: Math.round(msg.usage.output / 1000)
-                })}
+                {t('chat.tokens', { in: msg.usage.input.toLocaleString(), out: msg.usage.output.toLocaleString() })}
               </span>
             )}
             <button className="icon-btn" onClick={doCopy} title={t('chat.copyMessage')}>

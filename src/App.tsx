@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Toaster } from 'sonner'
 import { useStore } from './store'
+import { useI18n } from './lib/useI18n'
 import type { UpdaterState } from './shared/types'
 import { Sidebar } from './components/Sidebar'
 import { MenuBar } from './components/MenuBar'
@@ -14,7 +15,29 @@ import { ModelPicker } from './components/ModelPicker'
 import { SettingsModal } from './components/SettingsModal'
 import { CommandPalette } from './components/CommandPalette'
 import { ConfirmDialog } from './components/ConfirmDialog'
-import { useI18n } from './lib/useI18n'
+
+/** 顶栏 token 胶囊: 当前会话合计用量(过程透明化) */
+function SessionTokenChip() {
+  const { t } = useI18n()
+  const messages = useStore((s) => s.chat?.messages)
+  const stats = messages?.reduce(
+    (acc, m) => {
+      if (m.usage) {
+        acc.input += m.usage.input
+        acc.output += m.usage.output
+      }
+      return acc
+    },
+    { input: 0, output: 0 }
+  )
+  const total = (stats?.input ?? 0) + (stats?.output ?? 0)
+  if (!total) return null
+  return (
+    <span className="token-chip" title={t('chat.tokens', { in: stats!.input.toLocaleString(), out: stats!.output.toLocaleString() })}>
+      {t('chat.sessionTokens', { in: Math.round(stats!.input / 1000), out: Math.round(stats!.output / 1000) })}
+    </span>
+  )
+}
 
 export default function App() {
   const { t } = useI18n()
@@ -107,6 +130,7 @@ export default function App() {
             )}
           </div>
           <div className="topbar-right">
+            <SessionTokenChip />
             <ModelPicker />
           </div>
         </header>
