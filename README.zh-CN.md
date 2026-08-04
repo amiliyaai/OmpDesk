@@ -43,9 +43,8 @@ OmpDesk 通过 RPC 接口(`omp --mode rpc-ui`)驱动真实的 omp CLI —— 非
 | 平台 | 产物 | 说明 |
 | --- | --- | --- |
 | Windows x64 | `OmpDesk-<version>-win-x64.exe` | NSIS 安装包(可选安装目录、桌面快捷方式) |
-| macOS (Apple Silicon) | `OmpDesk-<version>-mac-arm64.dmg` | 需在 macOS 构建;首次打开:右键 → 打开 |
-| macOS (Intel) | `OmpDesk-<version>-mac-x64.dmg` | 需在 macOS 构建 |
-| Linux x64 | `OmpDesk-<version>-linux-x64.AppImage` · `.deb` | AppImage 需 `chmod +x` |
+| macOS (Apple Silicon + Intel) | `OmpDesk-<version>-mac-universal.dmg` | universal 单包双架构;需在 macOS 构建;首次打开:右键 → 打开 |
+| Linux x64 | `OmpDesk-<version>-linux-x86_64.AppImage` · `-linux-amd64.deb` | AppImage 需 `chmod +x` |
 
 最新版本请从 **Releases** 获取,发布流程与逐版本更新日志见 [RELEASE.md](RELEASE.md)。
 

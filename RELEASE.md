@@ -61,7 +61,7 @@ Pushing the tag triggers the release workflow. Watch it at **Actions → Release
 
 1. Open **Releases** → the new release:
    - Title `OmpDesk vX.Y.Z`, body contains the changelog section for this version.
-   - Artifacts present: `OmpDesk-<version>-win-x64.exe`, `OmpDesk-<version>-mac-universal.dmg` + `.zip`, `OmpDesk-<version>-linux-x64.AppImage` + `.deb`.
+   - Artifacts present: `OmpDesk-<version>-win-x64.exe`, `OmpDesk-<version>-mac-universal.dmg` + `.zip`, `OmpDesk-<version>-linux-x86_64.AppImage` + `-linux-amd64.deb`.
    - Update metadata present: `latest.yml` (Windows), `latest-mac.yml`, `latest-linux.yml`.
 2. **Smoke-test the auto-update** on at least one platform:
    - Install the previous version, launch it, wait ~10 s (or use tray → *Check for Updates…*).

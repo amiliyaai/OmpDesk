@@ -43,9 +43,8 @@ More: [streaming](shots/streaming.png) · [model picker](shots/model-picker.png)
 | Platform | Artifact | Notes |
 | --- | --- | --- |
 | Windows x64 | `OmpDesk-<version>-win-x64.exe` | NSIS installer (choose install dir; desktop shortcut) |
-| macOS (Apple Silicon) | `OmpDesk-<version>-mac-arm64.dmg` | Built on macOS; first launch: right-click → Open |
-| macOS (Intel) | `OmpDesk-<version>-mac-x64.dmg` | Built on macOS |
-| Linux x64 | `OmpDesk-<version>-linux-x64.AppImage` · `.deb` | AppImage needs `chmod +x` |
+| macOS (Apple Silicon + Intel) | `OmpDesk-<version>-mac-universal.dmg` | Universal single package; built on macOS; first launch: right-click → Open |
+| Linux x64 | `OmpDesk-<version>-linux-x86_64.AppImage` · `-linux-amd64.deb` | AppImage needs `chmod +x` |
 
 Grab the latest release from **Releases** — see [RELEASE.md](RELEASE.md) for the release process and per-version changelogs.
 

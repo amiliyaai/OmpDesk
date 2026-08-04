@@ -25,10 +25,9 @@ OmpDesk is a desktop GUI client for the [oh-my-pi (omp)](https://omp.sh/) termin
 | Platform | Architecture | Artifact |
 | --- | --- | --- |
 | Windows | x64 | `OmpDesk-0.1.0-win-x64.exe` (NSIS installer) |
-| macOS | arm64 (Apple Silicon) | `OmpDesk-0.1.0-mac-arm64.dmg` |
-| macOS | x64 (Intel) | `OmpDesk-0.1.0-mac-x64.dmg` |
-| Linux | x64 | `OmpDesk-0.1.0-linux-x64.AppImage` |
-| Linux | x64 | `OmpDesk-0.1.0-linux-x64.deb` |
+| macOS | universal (Apple Silicon + Intel) | `OmpDesk-0.1.0-mac-universal.dmg` (+ `.zip` for auto-update) |
+| Linux | x64 | `OmpDesk-0.1.0-linux-x86_64.AppImage` |
+| Linux | x64 | `OmpDesk-0.1.0-linux-amd64.deb` |
 
 Artifacts are named `OmpDesk-<version>-<platform>-<arch>.<ext>` per the electron-builder config. Verify integrity against the checksums attached to this release.
 
@@ -40,18 +39,18 @@ Run `OmpDesk-0.1.0-win-x64.exe` → choose the install directory (optional) → 
 
 **macOS**
 
-1. Open `OmpDesk-0.1.0-mac-<arch>.dmg` and drag OmpDesk into Applications.
+1. Open `OmpDesk-0.1.0-mac-universal.dmg` and drag OmpDesk into Applications.
 2. First launch (unsigned build): right-click the app → **Open** → **Open** to bypass Gatekeeper.
 
 **Linux**
 
 ```bash
 # AppImage (make executable first)
-chmod +x OmpDesk-0.1.0-linux-x64.AppImage
-./OmpDesk-0.1.0-linux-x64.AppImage
+chmod +x OmpDesk-0.1.0-linux-x86_64.AppImage
+./OmpDesk-0.1.0-linux-x86_64.AppImage
 
 # or Debian / Ubuntu via deb
-sudo apt install ./OmpDesk-0.1.0-linux-x64.deb
+sudo apt install ./OmpDesk-0.1.0-linux-amd64.deb
 ```
 
 ## What's new in 0.1.0

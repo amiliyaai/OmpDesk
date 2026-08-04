@@ -120,8 +120,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # 只上传文件: artifact 中含 *-unpacked 目录(调试产物), gh 不接受目录
-          ASSETS="$(find dist -maxdepth 1 -type f -print)"
+          # 只上传文件, 且排除 electron-builder 调试产物:
+          # artifact 中含 *-unpacked 目录(gh 不接受目录)与 builder-debug.yml
+          ASSETS="$(find dist -maxdepth 1 -type f ! -name 'builder-debug.yml' -print)"
           gh release create "$GITHUB_REF_NAME" \
             --title "OmpDesk v$VERSION" \
             --notes-file notes.md \
