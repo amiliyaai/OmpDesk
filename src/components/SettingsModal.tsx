@@ -13,6 +13,8 @@ import {
 } from 'lucide-react'
 import { useStore } from '../store'
 import { Dialog, DialogContent } from './ui/dialog'
+import { FieldSelect } from './ui/field-select'
+import { Switch } from './ui/switch'
 import type { ApprovalMode, McpServerDraft, RoleModels } from '../shared/types'
 
 // ---------- 模型服务: 方案(CC Switch 式) ----------
@@ -40,12 +42,12 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
       </div>
       <div className="form-row">
         <label>供应商</label>
-        <select value={provider} onChange={(e) => setProvider(e.target.value)}>
-          <option value="">选择供应商…</option>
-          {providers.map((p) => (
-            <option key={p.name} value={p.name}>{p.name}</option>
-          ))}
-        </select>
+        <FieldSelect
+          value={provider}
+          onChange={setProvider}
+          placeholder="选择供应商…"
+          options={providers.map((p) => ({ value: p.name, label: p.name }))}
+        />
       </div>
       <div className="form-row">
         <label>API Key (safeStorage 加密存储)</label>
@@ -68,11 +70,15 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
       </div>
       <div className="form-row">
         <label>审批模式</label>
-        <select value={approval} onChange={(e) => setApproval(e.target.value as ApprovalMode)}>
-          <option value="always-ask">始终询问</option>
-          <option value="write">写入自动 (write)</option>
-          <option value="yolo">全自动 (yolo)</option>
-        </select>
+        <FieldSelect
+          value={approval}
+          onChange={(v) => setApproval(v as ApprovalMode)}
+          options={[
+            { value: 'always-ask', label: '始终询问' },
+            { value: 'write', label: '写入自动 (write)' },
+            { value: 'yolo', label: '全自动 (yolo)' }
+          ]}
+        />
       </div>
       <div className="form-actions">
         <button className="btn ghost" onClick={onClose}>取消</button>
@@ -120,11 +126,15 @@ function McpForm({ editing, onClose }: { editing: { name: string; server: McpSer
       <div className="form-row"><label>服务器名称</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="如: github" /></div>
       <div className="form-row">
         <label>传输类型</label>
-        <select value={type} onChange={(e) => setType(e.target.value as McpServerDraft['type'])}>
-          <option value="stdio">stdio (本地命令)</option>
-          <option value="http">http</option>
-          <option value="sse">sse</option>
-        </select>
+        <FieldSelect
+          value={type}
+          onChange={(v) => setType(v as McpServerDraft['type'])}
+          options={[
+            { value: 'stdio', label: 'stdio (本地命令)' },
+            { value: 'http', label: 'http' },
+            { value: 'sse', label: 'sse' }
+          ]}
+        />
       </div>
       {type === 'stdio' ? (
         <>
@@ -232,17 +242,19 @@ export function SettingsModal() {
             {tab === 'models' && (
               <div className="settings-section">
                 <div className="section-title">审批模式</div>
-                <select
-                  value={settings.approvalMode || profileApproval}
-                  onChange={(e) => {
-                    void setSettings({ approvalMode: e.target.value as ApprovalMode }).then(() => addNotice('info', '审批模式已更新,会话进程已重启'))
+                <FieldSelect
+                  value={settings.approvalMode || profileApproval || ''}
+                  onChange={(v) => {
+                    void setSettings({ approvalMode: v as ApprovalMode }).then(() => addNotice('info', '审批模式已更新,会话进程已重启'))
                     flashSaved()
                   }}
-                >
-                  <option value="always-ask">始终询问 (推荐)</option>
-                  <option value="write">写入自动 (write)</option>
-                  <option value="yolo">全自动 (yolo)</option>
-                </select>
+                  placeholder="按 omp 配置"
+                  options={[
+                    { value: 'always-ask', label: '始终询问 (推荐)' },
+                    { value: 'write', label: '写入自动 (write)' },
+                    { value: 'yolo', label: '全自动 (yolo)' }
+                  ]}
+                />
                 <div className="section-hint">always-ask: 读写都询问; write: 写入自动、执行询问; yolo: 全部自动批准。改动后 omp 进程自动重启。</div>
 
                 <div className="section-title">配置方案 (一键切换)</div>
@@ -299,12 +311,11 @@ export function SettingsModal() {
                         {m.type}{m.command ? ` · ${m.command}` : ''}{m.url ? ` · ${m.url}` : ''} · 来源: {m.source}
                       </span>
                     </div>
-                    <button
-                      className={`switch ${m.enabled ? 'on' : ''}`}
-                      onClick={() => void setMcpEnabled(m.name, !m.enabled).then(() => refreshMcp())}
-                    >
-                      <span className="switch-knob" />
-                    </button>
+                    <Switch
+                      checked={m.enabled}
+                      onCheckedChange={(v) => void setMcpEnabled(m.name, v).then(() => refreshMcp())}
+                      aria-label={`${m.name} 启用状态`}
+                    />
                     <button className="icon-btn" title="编辑" onClick={() => { setEditingMcp({ name: m.name, server: { type: m.type as McpServerDraft['type'], command: m.command, args: m.args, url: m.url, enabled: m.enabled } }); setShowMcpForm(true) }}>
                       <ChevronRight size={13} />
                     </button>
@@ -335,9 +346,11 @@ export function SettingsModal() {
                       <span className="list-row-title">{s.name} <span className="tag">{s.root}</span></span>
                       <span className="list-row-sub">{s.description || '(无描述)'}{s.globs?.length ? ` · globs: ${s.globs.join(', ')}` : ''}</span>
                     </div>
-                    <button className={`switch ${s.enabled ? 'on' : ''}`} onClick={() => void toggleSkill(s.name, !s.enabled).then(() => refreshSkills())}>
-                      <span className="switch-knob" />
-                    </button>
+                    <Switch
+                      checked={s.enabled}
+                      onCheckedChange={(v) => void toggleSkill(s.name, v).then(() => refreshSkills())}
+                      aria-label={`${s.name} 启用状态`}
+                    />
                   </div>
                 ))}
                 {skills.length === 0 && <div className="section-hint">未发现 skills。</div>}
@@ -347,14 +360,15 @@ export function SettingsModal() {
             {tab === 'appearance' && (
               <div className="settings-section">
                 <div className="section-title">主题</div>
-                <select
+                <FieldSelect
                   value={settings.theme}
-                  onChange={(e) => { void setSettings({ theme: e.target.value as typeof settings.theme }); flashSaved() }}
-                >
-                  <option value="system">跟随系统</option>
-                  <option value="dark">深色</option>
-                  <option value="light">浅色</option>
-                </select>
+                  onChange={(v) => { void setSettings({ theme: v as typeof settings.theme }); flashSaved() }}
+                  options={[
+                    { value: 'system', label: '跟随系统' },
+                    { value: 'dark', label: '深色' },
+                    { value: 'light', label: '浅色' }
+                  ]}
+                />
                 <div className="section-title">字体大小</div>
                 <input
                   type="range"

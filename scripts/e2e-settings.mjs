@@ -85,9 +85,9 @@ check('Esc 关闭面板', (await win.locator('.palette').count()) === 0)
 console.log('── 模型下拉 ──')
 await win.click('.model-picker-btn')
 await win.waitForSelector('.model-menu', { timeout: 5000 })
-// 首次打开会启动 omp 进程拉取模型列表, 轮询等待
+// 首次打开会启动 omp 进程拉取模型列表, 轮询等待(冷启动扫描可能较慢)
 let modelGroups = 0
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 60; i++) {
   await win.waitForTimeout(500)
   modelGroups = await win.locator('.model-group').count()
   if (modelGroups > 0) break
