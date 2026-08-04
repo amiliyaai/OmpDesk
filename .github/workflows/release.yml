@@ -120,7 +120,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # 只上传文件: artifact 中含 *-unpacked 目录(调试产物), gh 不接受目录
+          ASSETS="$(find dist -maxdepth 1 -type f -print)"
           gh release create "$GITHUB_REF_NAME" \
             --title "OmpDesk v$VERSION" \
             --notes-file notes.md \
-            dist/*
+            $ASSETS
