@@ -34,6 +34,7 @@ import {
 } from './omp/mcp'
 import { getSkills, toggleSkill } from './omp/skills'
 import { ompVersion } from './omp/locate'
+import { tMain } from './i18n'
 import type {
   AppSettings,
   ApprovalMode,
@@ -145,7 +146,7 @@ export function registerIpc(deps: IpcDeps): void {
   ipcMain.handle('omp:openSession', async (_e, filePath: string) => {
     try {
       const detail = await parseSession(filePath)
-      if (!detail) return { ok: false, error: '会话文件无法解析' }
+      if (!detail) return { ok: false, error: tMain('ipc.parseFailed') }
       const cwd = detail.meta.workspace || getWorkspace()
       const client = await pool.get(cwd)
       await client.switchSession(filePath)
@@ -279,8 +280,8 @@ export function registerIpc(deps: IpcDeps): void {
   ipcMain.handle('omp:pickDirectory', async () => {
     const win = BrowserWindow.getFocusedWindow()
     const r = win
-      ? await dialog.showOpenDialog(win, { title: '选择工作目录', properties: ['openDirectory', 'createDirectory'] })
-      : await dialog.showOpenDialog({ title: '选择工作目录', properties: ['openDirectory', 'createDirectory'] })
+      ? await dialog.showOpenDialog(win, { title: tMain('ipc.pickDirTitle'), properties: ['openDirectory', 'createDirectory'] })
+      : await dialog.showOpenDialog({ title: tMain('ipc.pickDirTitle'), properties: ['openDirectory', 'createDirectory'] })
     if (r.canceled || !r.filePaths[0]) return null
     return r.filePaths[0]
   })

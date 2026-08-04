@@ -10,9 +10,11 @@ import {
   DialogTitle
 } from './ui/dialog'
 import { Button } from './ui/button'
+import { useI18n } from '../lib/useI18n'
 
 /** 自定义确认弹窗(替代原生 confirm, Radix Dialog + Enter/Esc 支持) */
 export function ConfirmDialog() {
+  const { t } = useI18n()
   const queue = useStore((s) => s.confirmQueue)
   const resolveConfirm = useStore((s) => s.resolveConfirm)
   const [focused, setFocused] = useState<'ok' | 'cancel'>('cancel')
@@ -69,7 +71,7 @@ export function ConfirmDialog() {
             className={focused === 'cancel' ? 'ring-2 ring-ring/50' : ''}
             onClick={() => req && resolveConfirm(req.id, false)}
           >
-            {req?.cancelText ?? '取消'}
+            {req?.cancelText ?? t('common.cancel')}
           </Button>
           <Button
             variant={req?.danger ? 'destructive' : 'default'}
@@ -77,7 +79,7 @@ export function ConfirmDialog() {
             className={focused === 'ok' ? 'ring-2 ring-ring/50' : ''}
             onClick={() => req && resolveConfirm(req.id, true)}
           >
-            {req?.confirmText ?? '确认'}
+            {req?.confirmText ?? t('common.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

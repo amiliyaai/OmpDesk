@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CornerDownLeft, Search } from 'lucide-react'
 import { useStore } from '../store'
+import { useI18n } from '../lib/useI18n'
 
 /** Ctrl+K 命令面板: 斜杠命令补全与执行 */
 export function CommandPalette() {
+  const { t } = useI18n()
   const open = useStore((s) => s.showPalette)
   const setOpen = useStore((s) => s.setShowPalette)
   const commands = useStore((s) => s.commands)
@@ -22,14 +24,14 @@ export function CommandPalette() {
 
   const results = useMemo(() => {
     const base = [
-      { name: 'new', description: '新建会话' },
-      { name: 'resume', description: '恢复会话' },
-      { name: 'clear', description: '清空当前会话' },
+      { name: 'new', description: t('palette.newDesc') },
+      { name: 'resume', description: t('palette.resumeDesc') },
+      { name: 'clear', description: t('palette.clearDesc') },
       ...commands.map((c) => ({ name: c.name, description: c.description ?? '' }))
     ]
     const qq = q.toLowerCase()
     return base.filter((c) => c.name.toLowerCase().includes(qq) || c.description.toLowerCase().includes(qq)).slice(0, 12)
-  }, [q, commands])
+  }, [q, commands, t])
 
   if (!open) return null
 
@@ -46,7 +48,7 @@ export function CommandPalette() {
           <input
             ref={inputRef}
             className="palette-input"
-            placeholder="输入命令,如 /help、/model…"
+            placeholder={t('palette.placeholder')}
             value={q}
             onChange={(e) => {
               setQ(e.target.value)
@@ -75,7 +77,7 @@ export function CommandPalette() {
               {i === cursor && <CornerDownLeft size={13} />}
             </button>
           ))}
-          {results.length === 0 && <div className="palette-empty">无匹配命令</div>}
+          {results.length === 0 && <div className="palette-empty">{t('palette.noMatch')}</div>}
         </div>
       </div>
     </div>

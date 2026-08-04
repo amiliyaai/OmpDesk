@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react'
 import { Check, ChevronDown, RefreshCw } from 'lucide-react'
 import { useStore } from '../store'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { useI18n } from '../lib/useI18n'
 
 /** 模型下拉(Popover + get_available_models + set_model, 运行时切换) */
 export function ModelPicker() {
+  const { t } = useI18n()
   const models = useStore((s) => s.models)
   const chat = useStore((s) => s.chat)
   const setModel = useStore((s) => s.setModel)
@@ -28,20 +30,20 @@ export function ModelPicker() {
       setOpen(v)
     }}>
       <PopoverTrigger asChild>
-        <button className="model-picker-btn" title="切换模型 (运行时生效)">
-          <span className="model-current">{current || '默认模型'}</span>
+        <button className="model-picker-btn" title={t('model.switchTitle')}>
+          <span className="model-current">{current || t('model.default')}</span>
           <ChevronDown size={13} />
         </button>
       </PopoverTrigger>
       <PopoverContent className="model-menu w-[340px] p-0" align="end" sideOffset={6}>
         <div className="model-menu-head">
-          <span>可用模型</span>
-          <button className="icon-btn" title="刷新" onClick={() => void loadModels()}>
+          <span>{t('model.available')}</span>
+          <button className="icon-btn" title={t('model.refresh')} onClick={() => void loadModels()}>
             <RefreshCw size={12} />
           </button>
         </div>
         <div className="model-menu-body">
-          {groups.length === 0 && <div className="model-empty">暂无模型列表(未连接或未配置)</div>}
+          {groups.length === 0 && <div className="model-empty">{t('model.empty')}</div>}
           {groups.map(([provider, list]) => (
             <div className="model-group" key={provider}>
               <div className="model-group-title">{provider}</div>

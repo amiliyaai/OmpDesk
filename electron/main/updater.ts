@@ -9,6 +9,7 @@ import { autoUpdater } from 'electron-updater'
 import type { UpdateInfo } from 'electron-updater'
 import type { BrowserWindow } from 'electron'
 import type { UpdaterState } from '../../src/shared/types'
+import { tMain } from './i18n'
 
 // 与 electron-builder.yml 的 publish 配置保持一致
 const FEED = { provider: 'github', owner: 'amiliyaai', repo: 'OmpDesk' } as const
@@ -45,8 +46,8 @@ function promptInstall(info: UpdateInfo): void {
   if (Notification.isSupported()) {
     try {
       const n = new Notification({
-        title: 'OmpDesk 更新已就绪',
-        body: `v${info.version} 已下载, 点击重启安装`
+        title: tMain('updater.readyTitle'),
+        body: tMain('updater.readyBody', { version: info.version })
       })
       n.on('click', () => void quitAndInstall())
       n.show()
@@ -78,9 +79,9 @@ export function setupUpdater(opts: {
     if (manualCheck) {
       void dialog.showMessageBox({
         type: 'info',
-        title: '检查更新',
-        message: 'OmpDesk 已是最新版本',
-        detail: `当前版本 v${app.getVersion()}`
+        title: tMain('updater.checkTitle'),
+        message: tMain('updater.upToDate'),
+        detail: tMain('updater.currentVersion', { version: app.getVersion() })
       })
     }
   })
@@ -91,9 +92,9 @@ export function setupUpdater(opts: {
     if (manualCheck) {
       void dialog.showMessageBox({
         type: 'error',
-        title: '检查更新失败',
-        message: '无法检查更新',
-        detail: `请确认网络连接并稍后重试。\n${message.slice(0, 500)}`
+        title: tMain('updater.failTitle'),
+        message: tMain('updater.failMessage'),
+        detail: tMain('updater.failDetail', { error: message.slice(0, 500) })
       })
     }
   })
@@ -107,9 +108,9 @@ export function checkForUpdates(manual: boolean): void {
     if (manual) {
       void dialog.showMessageBox({
         type: 'info',
-        title: '检查更新',
-        message: '开发模式不检查更新',
-        detail: '自动更新仅在打包版本中启用。'
+        title: tMain('updater.checkTitle'),
+        message: tMain('updater.devModeMessage'),
+        detail: tMain('updater.devModeDetail')
       })
     }
     return

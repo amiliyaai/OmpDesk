@@ -1,9 +1,11 @@
 import { Folder, Gauge, Loader2, Wrench } from 'lucide-react'
 import { useStore } from '../store'
 import { shortPath } from '../lib/format'
+import { useI18n } from '../lib/useI18n'
 
 /** 底部状态栏: 工作目录 / 模型 / 会话状态 / 执行中工具 / 审批模式 */
 export function StatusBar() {
+  const { t } = useI18n()
   const chat = useStore((s) => s.chat)
   const settings = useStore((s) => s.settings)
   const connected = useStore((s) => s.connected)
@@ -12,20 +14,20 @@ export function StatusBar() {
 
   const approvalLabel =
     settings?.approvalMode === 'always-ask'
-      ? '始终询问'
+      ? t('statusbar.alwaysAsk')
       : settings?.approvalMode === 'write'
-        ? '写入自动'
+        ? t('statusbar.writeAuto')
         : settings?.approvalMode === 'yolo'
-          ? '全自动'
-          : '按 omp 配置'
+          ? t('statusbar.yolo')
+          : t('statusbar.byOmp')
 
   const running = chat?.status === 'running'
   const execLabel = running
     ? executing === 'thinking'
-      ? '思考中…'
+      ? t('statusbar.thinking')
       : executing
-        ? `执行中: ${executing}`
-        : '处理中…'
+        ? t('statusbar.executing', { tool: executing })
+        : t('statusbar.processing')
     : ''
 
   return (
@@ -36,18 +38,18 @@ export function StatusBar() {
           <Folder size={12} />
           {shortPath(chat?.cwd ?? settings?.defaultWorkspace ?? '', 48)}
         </span>
-        {chat?.model && <span className="statusbar-item model">模型: {chat.model}</span>}
+        {chat?.model && <span className="statusbar-item model">{t('statusbar.model', { name: chat.model })}</span>}
       </div>
       <div className="statusbar-right">
         {execLabel && (
-          <span className="statusbar-item exec" title="当前执行状态">
+          <span className="statusbar-item exec" title={t('statusbar.execTitle')}>
             <Loader2 size={12} className="spin" />
             <Wrench size={11} />
             {execLabel}
           </span>
         )}
-        <span className="statusbar-item">{running ? '' : chat ? '就绪' : ''}</span>
-        <button className="statusbar-item chip" onClick={() => setShowSettings(true)} title="审批模式 (点击修改)">
+        <span className="statusbar-item">{running ? '' : chat ? t('statusbar.ready') : ''}</span>
+        <button className="statusbar-item chip" onClick={() => setShowSettings(true)} title={t('statusbar.approvalTitle')}>
           <Gauge size={12} />
           {approvalLabel}
         </button>

@@ -12,8 +12,10 @@ import { ModelPicker } from './components/ModelPicker'
 import { SettingsModal } from './components/SettingsModal'
 import { CommandPalette } from './components/CommandPalette'
 import { ConfirmDialog } from './components/ConfirmDialog'
+import { useI18n } from './lib/useI18n'
 
 export default function App() {
+  const { t } = useI18n()
   const boot = useStore((s) => s.boot)
   const booted = useStore((s) => s.booted)
   const dispatch = useStore((s) => s.dispatch)
@@ -53,6 +55,11 @@ export default function App() {
     return () => mq.removeEventListener('change', apply)
   }, [settings?.theme, settings?.fontScale])
 
+  // 语言 → html lang(供字体/渲染偏好)
+  useEffect(() => {
+    document.documentElement.lang = settings?.language ?? 'zh-CN'
+  }, [settings?.language])
+
   // Ctrl+K 命令面板 / Esc
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -69,7 +76,7 @@ export default function App() {
     return (
       <div className="boot-screen">
         <div className="boot-logo">π</div>
-        <div className="boot-text">OmpDesk 启动中…</div>
+        <div className="boot-text">{t('app.booting')}</div>
       </div>
     )
   }
@@ -81,9 +88,9 @@ export default function App() {
         <header className="topbar">
           <div className="topbar-left">
             {switching && (
-              <span className="topbar-loading" title="正在启动会话进程…">
+              <span className="topbar-loading" title={t('app.startingSession')}>
                 <Loader2 size={13} className="spin" />
-                正在启动会话进程…
+                {t('app.startingSession')}
               </span>
             )}
             {chat?.currentFile ? (
@@ -91,7 +98,7 @@ export default function App() {
                 {chat.currentFile.split(/[\\/]/).pop()?.replace(/\.jsonl$/i, '')}
               </span>
             ) : (
-              <span className="topbar-title">新会话</span>
+              <span className="topbar-title">{t('app.newSession')}</span>
             )}
           </div>
           <div className="topbar-right">
@@ -115,17 +122,17 @@ export default function App() {
       {update?.phase === 'downloaded' && (
         <div className="update-banner">
           <span>
-            新版本 <b>v{update.version}</b> 已下载, 重启后生效
+            {t('app.updateDownloaded', { version: update.version })}
           </span>
           <div className="update-banner-actions">
             <button className="btn primary small" onClick={() => void window.omp.quitAndInstall()}>
-              重启安装
+              {t('app.restartInstall')}
             </button>
             <button
               className="btn small"
               onClick={() => setUpdate((u) => (u?.phase === 'downloaded' ? { ...u, phase: 'idle' } : u))}
             >
-              稍后
+              {t('app.later')}
             </button>
           </div>
         </div>

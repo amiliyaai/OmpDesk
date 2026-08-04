@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { toast } from 'sonner'
+import { translate } from './lib/i18n'
 import type {
   AppSettings,
   CommandInfo,
@@ -20,6 +21,11 @@ import type {
 } from './shared/types'
 
 // ---------- 类型 ----------
+
+/** 按当前语言翻译(store action 内用) */
+function tr(get: () => State, key: string, params?: Record<string, string | number>): string {
+  return translate(get().settings?.language ?? 'zh-CN', key, params)
+}
 
 interface LiveDraft {
   message: DisplayMessage // 当前回合进行中的助手消息(独立于 messages, 增量只改它)
@@ -189,7 +195,7 @@ export const useStore = create<State>((set, get) => ({
     const ws = get().settings?.defaultWorkspace ?? ''
     const res = await window.omp.newSession(ws)
     if (!res.ok) {
-      get().addNotice('error', `新建会话失败: ${res.error}`)
+      get().addNotice('error', tr(get, 'notices.newSessionFailed', { error: String(res.error) }))
       return
     }
     set({
@@ -203,7 +209,7 @@ export const useStore = create<State>((set, get) => ({
   openSession: async (filePath) => {
     const detail = await window.omp.getSessionDetail(filePath)
     if (!detail) {
-      get().addNotice('error', '无法解析会话文件')
+      get().addNotice('error', tr(get, 'notices.parseSessionFailed'))
       return
     }
     // 先展示本地解析的历史(即时), 后台切换 RPC 会话(可能需启动进程, 数秒)
@@ -224,7 +230,7 @@ export const useStore = create<State>((set, get) => ({
     const res = await window.omp.openSession(filePath)
     set({ switching: false })
     if (!res.ok) {
-      get().addNotice('warn', `切换会话失败: ${res.error}(仅展示历史, 发送消息将新建会话)`)
+      get().addNotice('warn', tr(get, 'notices.switchSessionFailed', { error: String(res.error) }))
     }
   },
 
@@ -235,7 +241,7 @@ export const useStore = create<State>((set, get) => ({
       // 直接输入时先建会话
       const res = await window.omp.newSession(ws)
       if (!res.ok) {
-        get().addNotice('error', `启动会话失败: ${res.error}`)
+        get().addNotice('error', tr(get, 'notices.startSessionFailed', { error: String(res.error) }))
         return
       }
     }
@@ -257,7 +263,7 @@ export const useStore = create<State>((set, get) => ({
     const res = await window.omp.sendPrompt(text, images)
     if (!res.ok) {
       set((s) => ({ chat: s.chat ? { ...s.chat, status: 'idle' } : null }))
-      get().addNotice('error', `发送失败: ${res.error}`)
+      get().addNotice('error', tr(get, 'notices.sendFailed', { error: String(res.error) }))
     }
   },
 
@@ -267,7 +273,7 @@ export const useStore = create<State>((set, get) => ({
 
   setModel: async (provider, modelId) => {
     const res = await window.omp.setModel(provider, modelId)
-    if (!res.ok) get().addNotice('warn', `切换模型失败: ${res.error}`)
+    if (!res.ok) get().addNotice('warn', tr(get, 'notices.setModelFailed', { error: String(res.error) }))
     else set((s) => ({ chat: s.chat ? { ...s.chat, model: modelId } : null }))
   },
 
@@ -287,7 +293,7 @@ export const useStore = create<State>((set, get) => ({
 
   deleteSession: async (filePath) => {
     const res = await window.omp.deleteSession(filePath)
-    if (!res.ok) get().addNotice('error', `删除失败: ${res.error}`)
+    if (!res.ok) get().addNotice('error', tr(get, 'notices.deleteFailed', { error: String(res.error) }))
     if (get().chat?.currentFile === filePath) {
       set({ chat: null })
     }
@@ -299,8 +305,8 @@ export const useStore = create<State>((set, get) => ({
 
   exportSession: async (filePath) => {
     const res = await window.omp.exportSession(filePath)
-    if (res.ok && res.path) get().addNotice('info', `已导出: ${res.path}`)
-    else get().addNotice('error', `导出失败: ${res.error}`)
+    if (res.ok && res.path) get().addNotice('info', tr(get, 'notices.exported', { path: res.path }))
+    else get().addNotice('error', tr(get, 'notices.exportFailed', { error: String(res.error) }))
   },
 
   // ---------- 事件分发 ----------
@@ -366,7 +372,7 @@ export const useStore = create<State>((set, get) => ({
 
   saveMcpServer: async (name, server) => {
     const r = await window.omp.saveMcpServer(name, server)
-    if (!r.ok) get().addNotice('error', `保存 MCP 服务器失败: ${r.error}`)
+    if (!r.ok) get().addNotice('error', tr(get, 'notices.saveMcpFailed', { error: String(r.error) }))
     return r
   },
 
@@ -382,7 +388,7 @@ export const useStore = create<State>((set, get) => ({
 
   toggleSkill: async (name, enabled) => {
     const r = await window.omp.toggleSkill(name, enabled)
-    if (!r.ok) get().addNotice('error', `Skills 操作失败: ${r.error}`)
+    if (!r.ok) get().addNotice('error', tr(get, 'notices.skillFailed', { error: String(r.error) }))
     await get().refreshSkills()
   },
 
@@ -394,17 +400,17 @@ export const useStore = create<State>((set, get) => ({
   applyProfile: async (id) => {
     const res = await window.omp.applyProfile(id)
     if (res.ok) {
-      get().addNotice('info', '方案已应用,会话进程已重启')
+      get().addNotice('info', tr(get, 'notices.profileApplied'))
       await get().refreshProfiles()
       await get().refreshProviders()
     } else {
-      get().addNotice('error', `应用方案失败: ${res.error}`)
+      get().addNotice('error', tr(get, 'notices.applyProfileFailed', { error: String(res.error) }))
     }
   },
 
   saveProfile: async (p) => {
     const res = await window.omp.saveProfile(p)
-    if (!res.ok) get().addNotice('error', `保存方案失败: ${res.error}`)
+    if (!res.ok) get().addNotice('error', tr(get, 'notices.saveProfileFailed', { error: String(res.error) }))
     await get().refreshProfiles()
   },
 
@@ -665,7 +671,7 @@ function handleFrame(
     }
     case 'auto_compaction_started': {
       patchLive((l) => {
-        l.message.content = [...l.message.content, { kind: 'text', text: '⟳ 上下文过长,正在自动压缩…' }]
+        l.message.content = [...l.message.content, { kind: 'text', text: tr(get, 'chat.autoCompacting') }]
       })
       break
     }
@@ -673,15 +679,15 @@ function handleFrame(
       patchLive((l) => {
         const summary = extractText(frame.summary ?? '')
         l.message.content = [
-          ...l.message.content.filter((b) => !b.text.includes('正在自动压缩')),
-          { kind: 'text', text: `✓ 上下文已压缩${summary ? `: ${summary}` : ''}` }
+          ...l.message.content.filter((b) => !b.text.startsWith('⟳')),
+          { kind: 'text', text: tr(get, 'chat.compacted', { summary: summary ? `: ${summary}` : '' }) }
         ]
       })
       break
     }
     case 'error': {
       set((s) => ({
-        chat: s.chat ? { ...s.chat, status: 'error', errorText: String(frame.message ?? '错误') } : null
+        chat: s.chat ? { ...s.chat, status: 'error', errorText: String(frame.message ?? tr(get, 'chat.error')) } : null
       }))
       break
     }

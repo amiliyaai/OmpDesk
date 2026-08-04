@@ -15,10 +15,12 @@ import {
 import { useStore } from '../store'
 import { relativeTime, shortPath } from '../lib/format'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { useI18n } from '../lib/useI18n'
 import type { SessionMeta } from '../shared/types'
 
 /** 会话列表项(悬停操作: 固定/重命名/导出/删除) */
 function SessionItem({ meta }: { meta: SessionMeta }) {
+  const { t, locale } = useI18n()
   const chat = useStore((s) => s.chat)
   const openSession = useStore((s) => s.openSession)
   const setPinned = useStore((s) => s.setPinned)
@@ -43,7 +45,7 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
         setMenuOpen(true)
       }}
     >
-      {loading && <span className="session-loading" title="正在启动会话进程…" />}
+      {loading && <span className="session-loading" title={t('app.startingSession')} />}
       <button
         className="session-main"
         onClick={() => void openSession(meta.filePath)}
@@ -70,19 +72,19 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
           />
         ) : (
           <>
-            <span className="session-title">{meta.title || '无标题会话'}</span>
+            <span className="session-title">{meta.title || t('sidebar.untitled')}</span>
             <span className="session-meta">
-              {relativeTime(meta.updatedAt)}
+              {relativeTime(meta.updatedAt, locale)}
               {meta.workspace && <span className="session-ws"> · {shortPath(meta.workspace, 24)}</span>}
             </span>
           </>
         )}
       </button>
       <div className="session-actions" onClick={(e) => e.stopPropagation()}>
-        <button className="icon-btn" title={meta.pinned ? '取消固定' : '固定'} onClick={() => void setPinned(meta.filePath, !meta.pinned)}>
+        <button className="icon-btn" title={meta.pinned ? t('sidebar.unpin') : t('sidebar.pin')} onClick={() => void setPinned(meta.filePath, !meta.pinned)}>
           {meta.pinned ? <PinOff size={12} /> : <Pin size={12} />}
         </button>
-        <button className="icon-btn" title="重命名" onClick={() => { setRenaming(true); setTitle(meta.title) }}>
+        <button className="icon-btn" title={t('sidebar.rename')} onClick={() => { setRenaming(true); setTitle(meta.title) }}>
           <Pencil size={12} />
         </button>
         <div className="more-wrap">
@@ -94,7 +96,7 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
             }}
           >
             <DropdownMenuTrigger asChild>
-              <button className="icon-btn" title="更多" onClick={() => setMenuOpen((v) => !v)}>
+              <button className="icon-btn" title={t('sidebar.more')} onClick={() => setMenuOpen((v) => !v)}>
                 <MoreHorizontal size={12} />
               </button>
             </DropdownMenuTrigger>
@@ -102,22 +104,22 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
               <DropdownMenuItem
                 onSelect={() => void exportSession(meta.filePath)}
               >
-                <FileDown size={13} /> 导出 HTML
+                <FileDown size={13} /> {t('sidebar.exportHtml')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
                 className="danger"
                 onSelect={() =>
                   confirm({
-                    title: '删除会话',
-                    message: `删除「${meta.title || '无标题'}」?\n会话文件及其子会话将被移除, 无法恢复。`,
-                    confirmText: '删除',
+                    title: t('sidebar.deleteSession'),
+                    message: t('sidebar.deleteSessionMsg', { title: meta.title || t('sidebar.untitled') }),
+                    confirmText: t('common.delete'),
                     danger: true,
                     onOk: () => void deleteSession(meta.filePath)
                   })
                 }
               >
-                <Trash2 size={13} /> 删除
+                <Trash2 size={13} /> {t('common.delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -129,6 +131,7 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
 
 /** 左侧栏: 新建 + 搜索 + 按固定/工作区分组的会话列表 */
 export function Sidebar() {
+  const { t } = useI18n()
   const sessions = useStore((s) => s.sessions)
   const search = useStore((s) => s.search)
   const setSearch = useStore((s) => s.setSearch)
@@ -145,16 +148,17 @@ export function Sidebar() {
     const rest = filtered.filter((s) => !s.pinned)
     const byWs = new Map<string, SessionMeta[]>()
     for (const s of rest) {
-      const ws = s.workspace || '(未知)'
+      const ws = s.workspace || t('sidebar.unknownWorkspace')
       byWs.set(ws, [...(byWs.get(ws) ?? []), s])
     }
     const groups: Array<{ label: string; items: SessionMeta[] }> = []
-    if (pinned.length) groups.push({ label: '已固定', items: pinned })
+    if (pinned.length) groups.push({ label: t('sidebar.pinned'), items: pinned })
     for (const [ws, items] of [...byWs.entries()].sort((a, b) => b[1][0].updatedAt - a[1][0].updatedAt)) {
       groups.push({ label: ws, items })
     }
     return groups
-  }, [sessions, search])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions, search, t])
 
   return (
     <aside className="sidebar">
@@ -164,13 +168,13 @@ export function Sidebar() {
           <span className="logo-name">OmpDesk</span>
         </div>
         <button className="btn primary new-chat" onClick={() => void newSession()}>
-          <Plus size={15} /> 新建对话
+          <Plus size={15} /> {t('sidebar.newChat')}
         </button>
       </div>
       <div className="sidebar-search">
         <Search size={13} />
         <input
-          placeholder="搜索会话…"
+          placeholder={t('sidebar.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => {
@@ -178,7 +182,7 @@ export function Sidebar() {
           }}
         />
         {search && (
-          <button className="search-clear" title="清空 (Esc)" onClick={() => setSearch('')}>
+          <button className="search-clear" title={t('sidebar.clearSearch')} onClick={() => setSearch('')}>
             <X size={12} />
           </button>
         )}
@@ -186,7 +190,7 @@ export function Sidebar() {
       <div className="sidebar-list">
         {groups.length === 0 && (
           <div className="sidebar-empty">
-            {search ? '没有匹配的会话' : '还没有会话,开始第一个对话吧'}
+            {search ? t('sidebar.noMatch') : t('sidebar.empty')}
           </div>
         )}
         {groups.map((g) => (
@@ -202,9 +206,9 @@ export function Sidebar() {
         ))}
       </div>
       <div className="sidebar-foot">
-        <div className={`status-dot ${connected ? 'on' : 'off'}`} title={connected ? 'omp 已连接' : 'omp 未连接'} />
-        <span className="sidebar-foot-text">{connected ? '已连接' : '未连接'}</span>
-        <button className="icon-btn" title="设置" onClick={() => setShowSettings(true)}>
+        <div className={`status-dot ${connected ? 'on' : 'off'}`} title={connected ? t('sidebar.ompConnected') : t('sidebar.ompDisconnected')} />
+        <span className="sidebar-foot-text">{connected ? t('sidebar.connected') : t('sidebar.disconnected')}</span>
+        <button className="icon-btn" title={t('sidebar.settings')} onClick={() => setShowSettings(true)}>
           <Settings size={15} />
         </button>
       </div>

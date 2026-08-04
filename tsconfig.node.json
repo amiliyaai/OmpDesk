@@ -15,5 +15,5 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["electron/**/*.ts", "src/shared/**/*.ts", "electron.vite.config.ts"]
+  "include": ["electron/**/*.ts", "src/shared/**/*.ts", "src/lib/i18n/**/*.ts", "electron.vite.config.ts"]
 }

@@ -17,6 +17,7 @@ import { locateOmp } from './omp/locate'
 import { readSettings, writeSettings } from './omp/config'
 import { registerIpc } from './ipc'
 import { checkForUpdates, quitAndInstall, setupUpdater } from './updater'
+import { setLocale, tMain } from './i18n'
 import type { AppSettings, MainEvent, UpdaterState } from '../../src/shared/types'
 
 let mainWindow: BrowserWindow | null = null
@@ -50,6 +51,7 @@ async function bootstrap(): Promise<void> {
   // 1) 定位 omp
   ompBin = (await locateOmp()) ?? ''
   settings = await readSettings()
+  setLocale(settings.language ?? 'zh-CN')
   if (ompBin) {
     settings = await writeSettings({ ompPath: ompBin, ompAutoDetected: true })
   }
@@ -82,6 +84,7 @@ async function bootstrap(): Promise<void> {
     notifySessionsChanged: () => sendToWindow({ type: 'sessions:changed' }),
     notifySettingsChanged: (s) => {
       settings = s
+      setLocale(s.language ?? 'zh-CN')
       sendToWindow({ type: 'settings:changed', settings: s })
       registerHotkey()
       rebuildTrayMenu()
@@ -125,7 +128,7 @@ function maybeNotify(cwd: string, frame: Record<string, unknown>): void {
   if (!Notification.isSupported()) return
   try {
     const n = new Notification({
-      title: 'OmpDesk · 会话完成',
+      title: tMain('notify.sessionDoneTitle'),
       body: path.basename(cwd)
     })
     n.on('click', () => showWindow())
@@ -204,7 +207,7 @@ async function maybeTrayHint(): Promise<void> {
   sendToWindow({
     type: 'notice',
     level: 'info',
-    text: 'OmpDesk 已最小化到系统托盘, 可从托盘菜单完全退出'
+    text: tMain('tray.minimizeHint')
   })
 }
 
@@ -218,7 +221,7 @@ function createTray(): void {
     image = nativeImage.createEmpty()
   }
   tray = new Tray(image)
-  tray.setToolTip('OmpDesk — oh-my-pi 桌面端')
+  tray.setToolTip(tMain('tray.tooltip'))
   rebuildTrayMenu()
   tray.on('click', () => showWindow())
 }
@@ -226,20 +229,20 @@ function createTray(): void {
 function rebuildTrayMenu(): void {
   if (!tray) return
   const menu = Menu.buildFromTemplate([
-    { label: '打开 OmpDesk', click: () => showWindow() },
+    { label: tMain('tray.open'), click: () => showWindow() },
     { type: 'separator' },
     {
-      label: '新建会话',
+      label: tMain('tray.newSession'),
       click: () => {
         showWindow()
         mainWindow?.webContents.send('omp:event', { type: 'app:new-session' } satisfies MainEvent)
       }
     },
     { type: 'separator' },
-    { label: '检查更新…', click: () => checkForUpdates(true) },
-    { label: '关于 OmpDesk', click: () => showAboutDialog() },
+    { label: tMain('tray.checkUpdates'), click: () => checkForUpdates(true) },
+    { label: tMain('tray.about'), click: () => showAboutDialog() },
     { type: 'separator' },
-    { label: '退出', click: () => { isQuitting = true; app.quit() } }
+    { label: tMain('tray.quit'), click: () => { isQuitting = true; app.quit() } }
   ])
   tray.setContextMenu(menu)
 }
@@ -249,17 +252,17 @@ function rebuildTrayMenu(): void {
 function showAboutDialog(): void {
   void dialog.showMessageBox({
     type: 'info',
-    title: '关于 OmpDesk',
+    title: tMain('about.title'),
     message: 'OmpDesk',
     detail: [
-      `版本 ${app.getVersion()}`,
+      tMain('about.version', { version: app.getVersion() }),
       '',
-      'oh-my-pi (omp) 的桌面 GUI 客户端 —— 给终端 AI 编程助手一个家。',
+      tMain('about.desc'),
       '',
       '© amiliyaai · MIT License',
       'github.com/amiliyaai/OmpDesk'
     ].join('\n'),
-    buttons: ['打开 GitHub', '关闭'],
+    buttons: [tMain('about.openGithub'), tMain('common.cancel')],
     defaultId: 1,
     cancelId: 1
   }).then((r) => {

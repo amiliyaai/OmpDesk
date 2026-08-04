@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowUp, ImagePlus, Square } from 'lucide-react'
 import { useStore } from '../store'
+import { useI18n } from '../lib/useI18n'
 
 const IMAGE_LIMIT = 4
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024
 
 /** 底部输入区: Enter 发送 / Shift+Enter 换行 / 图片粘贴 / 运行中显示打断 */
 export function Composer() {
+  const { t } = useI18n()
   const chat = useStore((s) => s.chat)
   const send = useStore((s) => s.send)
   const abort = useStore((s) => s.abort)
@@ -53,7 +55,7 @@ export function Composer() {
       const remaining = IMAGE_LIMIT - images.length
       if (remaining <= 0) {
         e.preventDefault()
-        addNotice('warn', `最多附加 ${IMAGE_LIMIT} 张图片`)
+        addNotice('warn', t('notices.imageLimit', { n: IMAGE_LIMIT }))
         return
       }
       e.preventDefault()
@@ -67,13 +69,13 @@ export function Composer() {
           const b64 = await readAsBase64(f)
           if (b64) setImages((prev) => [...prev, b64])
         }
-        if (skipped > 0) addNotice('warn', `${skipped} 张图片超过 4MB 限制, 已跳过`)
+        if (skipped > 0) addNotice('warn', t('notices.imageSkipped', { n: skipped }))
       })()
     }
     document.addEventListener('paste', onPaste)
     return () => document.removeEventListener('paste', onPaste)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [images.length])
+  }, [images.length, t])
 
   const canSend = text.trim().length > 0 || images.length > 0
 
@@ -105,7 +107,7 @@ export function Composer() {
               </button>
             </div>
           ))}
-          <button className="img-add" title="粘贴图片即可添加" onClick={() => taRef.current?.focus()}>
+          <button className="img-add" title={t('chat.placeholder')} onClick={() => taRef.current?.focus()}>
             <ImagePlus size={16} />
           </button>
         </div>
@@ -115,7 +117,7 @@ export function Composer() {
           ref={taRef}
           value={text}
           rows={1}
-          placeholder={running ? '助手正在执行… 可发送消息打断' : '给 omp 发送消息 (Enter 发送, Shift+Enter 换行)'}
+          placeholder={running ? t('chat.placeholderRunning') : t('chat.placeholder')}
           onChange={(e) => {
             setText(e.target.value)
             const el = e.target
@@ -135,11 +137,11 @@ export function Composer() {
           }}
         />
         {running ? (
-          <button className="composer-btn stop" onClick={() => void abort()} title="停止生成">
+          <button className="composer-btn stop" onClick={() => void abort()} title={t('chat.stop')}>
             <Square size={15} fill="currentColor" />
           </button>
         ) : (
-          <button className="composer-btn" disabled={!canSend} onClick={submit} title="发送 (Enter)">
+          <button className="composer-btn" disabled={!canSend} onClick={submit} title={t('chat.send')}>
             <ArrowUp size={16} />
           </button>
         )}

@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Inbox, ListChecks, MessageSquareText } from 'lucide-react'
 import type { UiRequest } from '../shared/types'
 import { useStore } from '../store'
+import { useI18n } from '../lib/useI18n'
 
 /** extension_ui_request 卡片: confirm / select / input / editor */
 export function AskCard({ request }: { request: UiRequest }) {
+  const { t } = useI18n()
   const respondUi = useStore((s) => s.respondUi)
   const [value, setValue] = useState('')
   const [selected, setSelected] = useState<string[]>([])
@@ -17,14 +19,14 @@ export function AskCard({ request }: { request: UiRequest }) {
   useEffect(() => {
     if (!timeout) return
     const start = Date.now()
-    const t = setInterval(() => {
+    const t2 = setInterval(() => {
       const elapsed = Date.now() - start
       const left = Math.max(0, Math.ceil((timeout - elapsed) / 1000))
       setSecondsLeft(left)
       setProgress(Math.min(1, elapsed / timeout))
-      if (left <= 0) clearInterval(t)
+      if (left <= 0) clearInterval(t2)
     }, 200)
-    return () => clearInterval(t)
+    return () => clearInterval(t2)
   }, [timeout])
 
   // 键盘操作: Esc 取消; confirm 卡片 Enter 确认
@@ -66,14 +68,14 @@ export function AskCard({ request }: { request: UiRequest }) {
       <div className="askcard">
         <div className="askcard-head">
           <AlertTriangle size={14} />
-          <span>{request.title || '需要确认'}</span>
+          <span>{request.title || t('ask.needConfirm')}</span>
           {ProgressBar}
         </div>
         <div className="askcard-body">{request.message}</div>
         <div className="askcard-actions">
-          <button className="btn ghost" onClick={cancel}>取消</button>
+          <button className="btn ghost" onClick={cancel}>{t('common.cancel')}</button>
           <button className="btn primary" onClick={() => respondUi(request.id, { confirmed: true })}>
-            确认
+            {t('common.confirm')}
           </button>
         </div>
       </div>
@@ -92,7 +94,7 @@ export function AskCard({ request }: { request: UiRequest }) {
       <div className="askcard">
         <div className="askcard-head">
           <ListChecks size={14} />
-          <span>{request.title || '请选择'}</span>
+          <span>{request.title || t('ask.pleaseSelect')}</span>
           {ProgressBar}
         </div>
         <div className="askcard-body">{request.message}</div>
@@ -109,13 +111,13 @@ export function AskCard({ request }: { request: UiRequest }) {
           ))}
         </div>
         <div className="askcard-actions">
-          <button className="btn ghost" onClick={cancel}>取消</button>
+          <button className="btn ghost" onClick={cancel}>{t('common.cancel')}</button>
           <button
             className="btn primary"
             disabled={selected.length === 0}
             onClick={() => respondUi(request.id, { value: request.multiple ? selected : selected[0] })}
           >
-            确定
+            {t('common.confirm')}
           </button>
         </div>
       </div>
@@ -130,7 +132,7 @@ export function AskCard({ request }: { request: UiRequest }) {
       <div className="askcard">
         <div className="askcard-head">
           {isEditor ? <MessageSquareText size={14} /> : <Inbox size={14} />}
-          <span>{request.title || (isEditor ? '编辑内容' : '请输入')}</span>
+          <span>{request.title || (isEditor ? t('ask.editContent') : t('ask.pleaseInput'))}</span>
           {ProgressBar}
         </div>
         <div className="askcard-body">{request.message}</div>
@@ -150,9 +152,9 @@ export function AskCard({ request }: { request: UiRequest }) {
           }}
         />
         <div className="askcard-actions">
-          <button className="btn ghost" onClick={cancel}>取消</button>
+          <button className="btn ghost" onClick={cancel}>{t('common.cancel')}</button>
           <button className="btn primary" onClick={() => respondUi(request.id, { value })}>
-            提交
+            {t('ask.submit')}
           </button>
         </div>
       </div>
@@ -164,7 +166,7 @@ export function AskCard({ request }: { request: UiRequest }) {
     <div className="askcard">
       <div className="askcard-body">{request.message}</div>
       <div className="askcard-actions">
-        <button className="btn ghost" onClick={cancel}>知道了</button>
+        <button className="btn ghost" onClick={cancel}>{t('ask.gotIt')}</button>
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import type { DisplayMessage } from '../shared/types'
 import { copyText, renderMarkdown } from '../lib/markdown'
 import { ThinkingBlock } from './ThinkingBlock'
 import { ToolCard } from './ToolCard'
+import { useI18n } from '../lib/useI18n'
 
 function useCopyBtn(text: string): [boolean, () => void] {
   const [copied, setCopied] = useState(false)
@@ -20,6 +21,7 @@ function useCopyBtn(text: string): [boolean, () => void] {
 
 /** 单个代码块(hljs 高亮 + 复制按钮) */
 function CodeBlock({ code, lang }: { code: string; lang?: string }) {
+  const { t } = useI18n()
   const [copied, doCopy] = useCopyBtn(code)
   const html = useMemo(() => {
     try {
@@ -32,8 +34,8 @@ function CodeBlock({ code, lang }: { code: string; lang?: string }) {
   return (
     <div className="codeblock">
       <div className="codeblock-head">
-        <span>{lang || 'code'}</span>
-        <button className="icon-btn" onClick={doCopy} title="复制代码">
+        <span>{lang || t('chat.code')}</span>
+        <button className="icon-btn" onClick={doCopy} title={t('chat.copyCode')}>
           {copied ? <Check size={13} /> : <ClipboardCopy size={13} />}
         </button>
       </div>
@@ -94,6 +96,7 @@ export const MessageBubble = memo(function MessageBubble({
   msg: DisplayMessage
   streaming?: boolean
 }) {
+  const { t } = useI18n()
   const [copied, doCopy] = useCopyBtn(msg.content.map((c) => c.text).join('\n'))
   const text = msg.content.find((c) => c.kind === 'text')?.text ?? ''
   const thinks = msg.content.filter((c) => c.kind === 'thinking')
@@ -102,8 +105,8 @@ export const MessageBubble = memo(function MessageBubble({
     <div className={`msg assistant ${streaming ? 'streaming' : ''}`}>
       <div className="msg-avatar assistant">π</div>
       <div className="msg-content">
-        {thinks.map((t, i) => (
-          <ThinkingBlock key={i} text={t.text} />
+        {thinks.map((t2, i) => (
+          <ThinkingBlock key={i} text={t2.text} />
         ))}
         {text && (
           <div className="bubble assistant">
@@ -124,9 +127,14 @@ export const MessageBubble = memo(function MessageBubble({
           <div className="msg-meta">
             {msg.model && <span>{msg.model}</span>}
             {msg.usage && msg.usage.input > 0 && (
-              <span>↑{Math.round(msg.usage.input / 1000)}k ↓{Math.round(msg.usage.output / 1000)}k tokens</span>
+              <span>
+                {t('chat.tokens', {
+                  in: Math.round(msg.usage.input / 1000),
+                  out: Math.round(msg.usage.output / 1000)
+                })}
+              </span>
             )}
-            <button className="icon-btn" onClick={doCopy} title="复制消息">
+            <button className="icon-btn" onClick={doCopy} title={t('chat.copyMessage')}>
               {copied ? <Check size={12} /> : <ClipboardCopy size={12} />}
             </button>
           </div>

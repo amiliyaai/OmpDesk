@@ -137,6 +137,9 @@ export interface CommandInfo {
 
 export type ApprovalMode = 'always-ask' | 'write' | 'yolo'
 
+/** 应用 UI 语言 */
+export type Language = 'zh-CN' | 'en' | 'ja'
+
 export interface AppSettings {
   theme: 'dark' | 'light' | 'system'
   fontScale: number // 0.9 ~ 1.2
@@ -147,6 +150,8 @@ export interface AppSettings {
   maxPoolProcesses: number
   idleKillMinutes: number
   hotkey: string
+  /** 应用 UI 语言(缺省 zh-CN) */
+  language?: Language
   /** 关闭窗口→托盘的首开提示是否已展示过 */
   trayHintShown?: boolean
 }
