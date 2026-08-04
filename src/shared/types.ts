@@ -147,6 +147,8 @@ export interface AppSettings {
   maxPoolProcesses: number
   idleKillMinutes: number
   hotkey: string
+  /** 关闭窗口→托盘的首开提示是否已展示过 */
+  trayHintShown?: boolean
 }
 
 // ---------- 配置方案(CC Switch 式) ----------
@@ -282,6 +284,7 @@ export interface OmpApi {
   respondUi(id: string, payload: UiResponsePayload): Promise<void>
   setPinned(filePath: string, pinned: boolean): Promise<void>
   getOmpLogs(count: number): Promise<string[]>
+  pickDirectory(): Promise<string | null>
   checkForUpdates(): Promise<void>
   quitAndInstall(): Promise<void>
   onEvent(cb: (e: MainEvent) => void): () => void

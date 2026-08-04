@@ -14,6 +14,7 @@ export interface VirtualList<T> {
   visible: Array<VirtualItem<T>>
   scrollTop: number
   scrollToBottom: (behavior?: ScrollBehavior) => void
+  scrollToTop: (behavior?: ScrollBehavior) => void
   isNearBottom: boolean
   measure: (index: number, el: HTMLDivElement | null) => void
 }
@@ -123,6 +124,13 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
     nearBottom.current = true
   }
 
+  // 滚动到顶部
+  const scrollToTop = (behavior: ScrollBehavior = 'smooth'): void => {
+    const el = containerRef.current
+    if (!el) return
+    el.scrollTo({ top: 0, behavior })
+  }
+
   // 记录实测高度(rAF 节流合并, 触发一次重渲染)
   const measure = (index: number, el: HTMLDivElement | null): void => {
     if (!el) return
@@ -150,6 +158,7 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
     visible,
     scrollTop,
     scrollToBottom,
+    scrollToTop,
     isNearBottom: nearBottom.current,
     measure
   }

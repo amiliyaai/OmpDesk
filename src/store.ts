@@ -43,6 +43,17 @@ interface Notice {
   text: string
 }
 
+/** 自定义确认弹窗请求(替代原生 confirm) */
+export interface ConfirmRequest {
+  id: number
+  title: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  danger?: boolean
+  onOk: () => void
+}
+
 interface State {
   booted: boolean
   ompFound: boolean
@@ -65,6 +76,12 @@ interface State {
   showSettings: boolean
   showPalette: boolean
   connected: boolean
+  /** 会话切换/进程启动中(给用户反馈, 防"卡死感") */
+  switching: boolean
+  /** 当前回合执行状态: 'thinking' | 工具名 | null */
+  executing: string | null
+  /** 自定义确认弹窗队列 */
+  confirmQueue: ConfirmRequest[]
   // actions
   boot: () => Promise<void>
   refreshSessions: () => Promise<void>
@@ -97,6 +114,8 @@ interface State {
   deleteProfile: (id: string) => Promise<void>
   addNotice: (level: Notice['level'], text: string) => void
   dismissNotice: (id: number) => void
+  confirm: (req: Omit<ConfirmRequest, 'id'>) => void
+  resolveConfirm: (id: number, ok: boolean) => void
 }
 
 let noticeSeq = 1
@@ -142,6 +161,9 @@ export const useStore = create<State>((set, get) => ({
   showSettings: false,
   showPalette: false,
   connected: false,
+  switching: false,
+  executing: null,
+  confirmQueue: [],
 
   boot: async () => {
     const boot = await window.omp.bootstrap()
@@ -196,9 +218,11 @@ export const useStore = create<State>((set, get) => ({
         model: detail.meta.model ?? null
       },
       todos: [],
-      uiRequests: []
+      uiRequests: [],
+      switching: true // 切换/启动进程期间显示 loading 反馈
     })
     const res = await window.omp.openSession(filePath)
+    set({ switching: false })
     if (!res.ok) {
       get().addNotice('warn', `切换会话失败: ${res.error}(仅展示历史, 发送消息将新建会话)`)
     }
@@ -397,7 +421,19 @@ export const useStore = create<State>((set, get) => ({
     }, 6000)
   },
 
-  dismissNotice: (id) => set((s) => ({ notices: s.notices.filter((n) => n.id !== id) }))
+  dismissNotice: (id) => set((s) => ({ notices: s.notices.filter((n) => n.id !== id) })),
+
+  confirm: (req) => {
+    const id = noticeSeq++
+    set((s) => ({ confirmQueue: [...s.confirmQueue, { ...req, id }] }))
+  },
+
+  resolveConfirm: (id, ok) => {
+    const s = get()
+    const req = s.confirmQueue.find((r) => r.id === id)
+    set({ confirmQueue: s.confirmQueue.filter((r) => r.id !== id) })
+    if (ok && req) req.onOk()
+  }
 }))
 
 // ---------- 帧处理(rAF 合帧) ----------
@@ -439,6 +475,7 @@ function handleFrame(
 
   switch (type) {
     case 'agent_start': {
+      set({ executing: 'thinking' })
       if (chat.live) break // 已有进行中的回合
       const liveMsg: DisplayMessage = {
         id: `live_${Date.now()}`,
@@ -505,6 +542,7 @@ function handleFrame(
     case 'message_end':
       break
     case 'tool_execution_start': {
+      set({ executing: String(frame.toolName ?? 'tool') })
       patchLive((l) => {
         const id = String(frame.toolCallId ?? frame.id ?? '')
         if (!id) return
@@ -547,6 +585,7 @@ function handleFrame(
     }
     case 'agent_end': {
       const isTerminal = frame.isTerminal !== false
+      set({ executing: null })
       set((s) => {
         const c = s.chat
         if (!c) return {}
@@ -592,6 +631,7 @@ function handleFrame(
     }
     case 'prompt_result': {
       if (frame.agentInvoked === false) {
+        set({ executing: null })
         set((s) => {
           const c = s.chat
           if (!c) return {}

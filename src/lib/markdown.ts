@@ -21,13 +21,13 @@ marked.use(
 
 marked.setOptions({ gfm: true, breaks: true })
 
-/** markdown → 净化后的 HTML(代码块已高亮) */
+/** markdown → 净化后的 HTML(代码块已高亮, 链接新窗口打开) */
 export function renderMarkdown(text: string): string {
   const html = marked.parse(text, { async: false }) as string
   return DOMPurify.sanitize(html, {
     ADD_ATTR: ['target', 'rel'],
     ADD_TAGS: []
-  })
+  }).replace(/<a href=/g, '<a target="_blank" rel="noreferrer" href=')
 }
 
 /** 复制到剪贴板 */

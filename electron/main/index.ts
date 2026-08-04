@@ -161,10 +161,19 @@ function createWindow(): void {
     if (!isQuitting) {
       e.preventDefault()
       mainWindow?.hide() // 托盘常驻(CC Switch / ChatGPT 模式)
+      void maybeTrayHint()
     }
   })
   mainWindow.on('closed', () => {
     mainWindow = null
+  })
+
+  // 外链(markdown 链接等)一律走系统浏览器
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      void shell.openExternal(url)
+    }
+    return { action: 'deny' }
   })
 
   if (process.env.ELECTRON_RENDERER_URL) {
@@ -182,6 +191,21 @@ function showWindow(): void {
   if (mainWindow.isMinimized()) mainWindow.restore()
   mainWindow.show()
   mainWindow.focus()
+}
+
+/** 关闭到托盘的首开提示(仅一次) */
+async function maybeTrayHint(): Promise<void> {
+  if (settings.trayHintShown) return
+  try {
+    settings = await writeSettings({ trayHintShown: true })
+  } catch {
+    return
+  }
+  sendToWindow({
+    type: 'notice',
+    level: 'info',
+    text: 'OmpDesk 已最小化到系统托盘, 可从托盘菜单完全退出'
+  })
 }
 
 // ---------- 托盘 ----------

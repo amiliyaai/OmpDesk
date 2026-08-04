@@ -44,6 +44,7 @@ const api: OmpApi = {
   setPinned: (filePath: string, pinned: boolean) =>
     ipcRenderer.invoke('omp:setPinned', filePath, pinned),
   getOmpLogs: (count: number) => ipcRenderer.invoke('omp:getOmpLogs', count),
+  pickDirectory: () => ipcRenderer.invoke('omp:pickDirectory'),
   checkForUpdates: () => ipcRenderer.invoke('updater:check'),
   quitAndInstall: () => ipcRenderer.invoke('updater:quitAndInstall'),
   onEvent: (cb: (e: MainEvent) => void) => {

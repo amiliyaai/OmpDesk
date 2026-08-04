@@ -9,22 +9,57 @@ export function AskCard({ request }: { request: UiRequest }) {
   const [value, setValue] = useState('')
   const [selected, setSelected] = useState<string[]>([])
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+  const [progress, setProgress] = useState(0)
   const textRef = useRef<HTMLTextAreaElement | null>(null)
-
-  // 超时倒计时提示
   const timeout = 'timeout' in request ? request.timeout : null
+
+  // 超时倒计时: 数字 + 细进度条
   useEffect(() => {
     if (!timeout) return
-    const end = Date.now() + timeout
+    const start = Date.now()
     const t = setInterval(() => {
-      const left = Math.round((end - Date.now()) / 1000)
-      setSecondsLeft(Math.max(0, left))
+      const elapsed = Date.now() - start
+      const left = Math.max(0, Math.ceil((timeout - elapsed) / 1000))
+      setSecondsLeft(left)
+      setProgress(Math.min(1, elapsed / timeout))
       if (left <= 0) clearInterval(t)
-    }, 500)
+    }, 200)
     return () => clearInterval(t)
   }, [timeout])
 
+  // 键盘操作: Esc 取消; confirm 卡片 Enter 确认
+  useEffect(() => {
+    if (!request || request.kind === 'notify') return
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        cancel()
+      } else if (e.key === 'Enter' && request.kind === 'confirm') {
+        e.preventDefault()
+        respondUi(request.id, { confirmed: true })
+      }
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request])
+
   const cancel = (): void => respondUi(request.id, { cancelled: true })
+
+  /** 超时进度条(有超时的请求) */
+  const ProgressBar = (
+    <div className="askcard-timeout">
+      {secondsLeft !== null && timeout ? (
+        <>
+          <span className="askcard-timeout-bar">
+            <span className="askcard-timeout-fill" style={{ width: `${progress * 100}%` }} />
+          </span>
+          <span className="askcard-timeout-num">{secondsLeft}s</span>
+        </>
+      ) : null}
+    </div>
+  )
 
   if (request.kind === 'confirm') {
     return (
@@ -32,7 +67,7 @@ export function AskCard({ request }: { request: UiRequest }) {
         <div className="askcard-head">
           <AlertTriangle size={14} />
           <span>{request.title || '需要确认'}</span>
-          {secondsLeft !== null && <span className="askcard-timeout">{secondsLeft}s</span>}
+          {ProgressBar}
         </div>
         <div className="askcard-body">{request.message}</div>
         <div className="askcard-actions">
@@ -58,7 +93,7 @@ export function AskCard({ request }: { request: UiRequest }) {
         <div className="askcard-head">
           <ListChecks size={14} />
           <span>{request.title || '请选择'}</span>
-          {secondsLeft !== null && <span className="askcard-timeout">{secondsLeft}s</span>}
+          {ProgressBar}
         </div>
         <div className="askcard-body">{request.message}</div>
         <div className="askcard-options">
@@ -96,7 +131,7 @@ export function AskCard({ request }: { request: UiRequest }) {
         <div className="askcard-head">
           {isEditor ? <MessageSquareText size={14} /> : <Inbox size={14} />}
           <span>{request.title || (isEditor ? '编辑内容' : '请输入')}</span>
-          {secondsLeft !== null && <span className="askcard-timeout">{secondsLeft}s</span>}
+          {ProgressBar}
         </div>
         <div className="askcard-body">{request.message}</div>
         <textarea

@@ -4,6 +4,7 @@ import {
   Check,
   ChevronRight,
   Database,
+  FolderOpen,
   Palette,
   Plus,
   Server,
@@ -179,6 +180,7 @@ export function SettingsModal() {
   const skills = useStore((s) => s.skills)
   const toggleSkill = useStore((s) => s.toggleSkill)
   const addNotice = useStore((s) => s.addNotice)
+  const confirm = useStore((s) => s.confirm)
   const [tab, setTab] = useState<TabId>('models')
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [showMcpForm, setShowMcpForm] = useState(false)
@@ -266,7 +268,9 @@ export function SettingsModal() {
                     <button className="btn small primary" onClick={() => void applyProfile(p.id)}>
                       应用
                     </button>
-                    <button className="icon-btn" title="删除方案" onClick={() => { if (confirm(`删除方案「${p.name}」?`)) void deleteProfile(p.id) }}>
+                    <button className="icon-btn" title="删除方案" onClick={() => {
+                      confirm({ title: '删除方案', message: `删除方案「${p.name}」?`, confirmText: '删除', danger: true, onOk: () => void deleteProfile(p.id) })
+                    }}>
                       <Trash2 size={13} />
                     </button>
                   </div>
@@ -314,7 +318,9 @@ export function SettingsModal() {
                     <button className="icon-btn" title="编辑" onClick={() => { setEditingMcp({ name: m.name, server: { type: m.type as McpServerDraft['type'], command: m.command, args: m.args, url: m.url, enabled: m.enabled } }); setShowMcpForm(true) }}>
                       <ChevronRight size={13} />
                     </button>
-                    <button className="icon-btn" title="删除" onClick={() => { if (confirm(`删除 MCP 服务器「${m.name}」?`)) void deleteMcpServer(m.name).then(() => refreshMcp()) }}>
+                    <button className="icon-btn" title="删除" onClick={() => {
+                      confirm({ title: '删除 MCP 服务器', message: `删除 MCP 服务器「${m.name}」?`, confirmText: '删除', danger: true, onOk: () => void deleteMcpServer(m.name).then(() => refreshMcp()) })
+                    }}>
                       <Trash2 size={13} />
                     </button>
                   </div>
@@ -375,7 +381,20 @@ export function SettingsModal() {
             {tab === 'data' && (
               <div className="settings-section">
                 <div className="section-title">默认工作目录</div>
-                <input value={workspace} onChange={(e) => setWorkspace(e.target.value)} placeholder="C:\path\to\project" />
+                <div className="workspace-row">
+                  <input value={workspace} onChange={(e) => setWorkspace(e.target.value)} placeholder="C:\path\to\project" />
+                  <button
+                    className="btn ghost small"
+                    title="浏览…"
+                    onClick={() => {
+                      void window.omp.pickDirectory().then((p) => {
+                        if (p) setWorkspace(p)
+                      })
+                    }}
+                  >
+                    <FolderOpen size={13} /> 浏览…
+                  </button>
+                </div>
                 <div className="form-actions inline">
                   <button className="btn small primary" onClick={() => { void setSettings({ defaultWorkspace: workspace }); flashSaved() }}>
                     {saved ? <Check size={13} /> : '保存'}

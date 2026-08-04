@@ -9,7 +9,8 @@ import {
   Plus,
   Search,
   Settings,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react'
 import { useStore } from '../store'
 import { relativeTime, shortPath } from '../lib/format'
@@ -23,13 +24,23 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
   const renameSession = useStore((s) => s.renameSession)
   const deleteSession = useStore((s) => s.deleteSession)
   const exportSession = useStore((s) => s.exportSession)
+  const confirm = useStore((s) => s.confirm)
+  const switching = useStore((s) => s.switching)
   const [menuOpen, setMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [title, setTitle] = useState(meta.title)
   const active = chat?.currentFile === meta.filePath
+  const loading = active && switching
 
   return (
-    <div className={`session-item ${active ? 'active' : ''}`}>
+    <div
+      className={`session-item ${active ? 'active' : ''} ${loading ? 'loading' : ''}`}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        setMenuOpen(true)
+      }}
+    >
+      {loading && <span className="session-loading" title="正在启动会话进程…" />}
       <button
         className="session-main"
         onClick={() => void openSession(meta.filePath)}
@@ -84,7 +95,13 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
                 className="danger"
                 onClick={() => {
                   setMenuOpen(false)
-                  if (confirm(`删除会话「${meta.title || '无标题'}」?\n(同时清理子会话文件)`)) void deleteSession(meta.filePath)
+                  confirm({
+                    title: '删除会话',
+                    message: `删除「${meta.title || '无标题'}」?\n会话文件及其子会话将被移除, 无法恢复。`,
+                    confirmText: '删除',
+                    danger: true,
+                    onOk: () => void deleteSession(meta.filePath)
+                  })
                 }}
               >
                 <Trash2 size={13} /> 删除
@@ -143,7 +160,15 @@ export function Sidebar() {
           placeholder="搜索会话…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setSearch('')
+          }}
         />
+        {search && (
+          <button className="search-clear" title="清空 (Esc)" onClick={() => setSearch('')}>
+            <X size={12} />
+          </button>
+        )}
       </div>
       <div className="sidebar-list">
         {groups.length === 0 && (

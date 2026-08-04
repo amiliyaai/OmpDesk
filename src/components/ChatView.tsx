@@ -4,6 +4,7 @@ import { useAutoScroll, useVirtualList } from '../lib/virtual'
 import { MessageBubble, NoticeBubble, UserBubble } from './MessageBubble'
 import { AskCard } from './AskCard'
 import { EmptyState } from './EmptyState'
+import { ScrollTopButton } from './ScrollTopButton'
 import type { DisplayMessage } from '../shared/types'
 
 /** 虚拟滚动的单条消息容器(实测高度反馈给虚拟列表) */
@@ -90,6 +91,12 @@ export function ChatView() {
               ))}
             </div>
           )}
+
+          {/* 回到顶部(长会话滚离顶部时浮现) */}
+          <ScrollTopButton
+            visible={list.scrollTop > 2000}
+            onClick={() => list.scrollToTop(list.scrollTop > 10_000 ? 'auto' : 'smooth')}
+          />
         </>
       )}
     </div>

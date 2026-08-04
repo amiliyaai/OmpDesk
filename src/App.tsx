@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Info, X } from 'lucide-react'
+import { AlertTriangle, Info, Loader2, X } from 'lucide-react'
 import { useStore } from './store'
 import type { UpdaterState } from './shared/types'
 import { Sidebar } from './components/Sidebar'
@@ -10,6 +10,7 @@ import { TodoPanel } from './components/TodoPanel'
 import { ModelPicker } from './components/ModelPicker'
 import { SettingsModal } from './components/SettingsModal'
 import { CommandPalette } from './components/CommandPalette'
+import { ConfirmDialog } from './components/ConfirmDialog'
 
 export default function App() {
   const boot = useStore((s) => s.boot)
@@ -20,6 +21,7 @@ export default function App() {
   const dismissNotice = useStore((s) => s.dismissNotice)
   const setShowPalette = useStore((s) => s.setShowPalette)
   const chat = useStore((s) => s.chat)
+  const switching = useStore((s) => s.switching)
   const [update, setUpdate] = useState<UpdaterState | null>(null)
 
   // 启动 + 订阅主进程事件
@@ -78,6 +80,12 @@ export default function App() {
       <main className="main">
         <header className="topbar">
           <div className="topbar-left">
+            {switching && (
+              <span className="topbar-loading" title="正在启动会话进程…">
+                <Loader2 size={13} className="spin" />
+                正在启动会话进程…
+              </span>
+            )}
             {chat?.currentFile ? (
               <span className="topbar-title" title={chat.currentFile}>
                 {chat.currentFile.split(/[\\/]/).pop()?.replace(/\.jsonl$/i, '')}
@@ -101,6 +109,7 @@ export default function App() {
       </main>
       <SettingsModal />
       <CommandPalette />
+      <ConfirmDialog />
 
       {/* 自动更新 banner(下载完成后提示重启安装) */}
       {update?.phase === 'downloaded' && (

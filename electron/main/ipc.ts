@@ -1,4 +1,4 @@
-import { ipcMain, app } from 'electron'
+import { ipcMain, app, dialog, BrowserWindow } from 'electron'
 import { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import { OmpPool } from './omp/pool'
@@ -273,6 +273,17 @@ export function registerIpc(deps: IpcDeps): void {
   // ---------- 日志 ----------
 
   ipcMain.handle('omp:getOmpLogs', (_e, count: number) => deps.getLogTail(count ?? 50))
+
+  // ---------- 目录选择 ----------
+
+  ipcMain.handle('omp:pickDirectory', async () => {
+    const win = BrowserWindow.getFocusedWindow()
+    const r = win
+      ? await dialog.showOpenDialog(win, { title: '选择工作目录', properties: ['openDirectory', 'createDirectory'] })
+      : await dialog.showOpenDialog({ title: '选择工作目录', properties: ['openDirectory', 'createDirectory'] })
+    if (r.canceled || !r.filePaths[0]) return null
+    return r.filePaths[0]
+  })
 
   // ---------- 角色模型(方案编辑器用) ----------
 

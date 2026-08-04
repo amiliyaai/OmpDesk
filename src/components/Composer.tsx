@@ -11,6 +11,7 @@ export function Composer() {
   const send = useStore((s) => s.send)
   const abort = useStore((s) => s.abort)
   const commands = useStore((s) => s.commands)
+  const addNotice = useStore((s) => s.addNotice)
   const [text, setText] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [completions, setCompletions] = useState<string[]>([])
@@ -49,13 +50,24 @@ export function Composer() {
       const files = Array.from(e.clipboardData?.files ?? [])
       const imgs = files.filter((f) => f.type.startsWith('image/'))
       if (!imgs.length) return
+      const remaining = IMAGE_LIMIT - images.length
+      if (remaining <= 0) {
+        e.preventDefault()
+        addNotice('warn', `最多附加 ${IMAGE_LIMIT} 张图片`)
+        return
+      }
       e.preventDefault()
       void (async () => {
-        for (const f of imgs.slice(0, IMAGE_LIMIT - images.length)) {
-          if (f.size > MAX_IMAGE_BYTES) continue
+        let skipped = 0
+        for (const f of imgs.slice(0, remaining)) {
+          if (f.size > MAX_IMAGE_BYTES) {
+            skipped++
+            continue
+          }
           const b64 = await readAsBase64(f)
           if (b64) setImages((prev) => [...prev, b64])
         }
+        if (skipped > 0) addNotice('warn', `${skipped} 张图片超过 4MB 限制, 已跳过`)
       })()
     }
     document.addEventListener('paste', onPaste)
