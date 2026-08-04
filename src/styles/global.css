@@ -946,3 +946,59 @@ textarea { resize: none; }
 
 /* 侧边栏分组标题弱化但可读 */
 .session-group-title { color: color-mix(in oklch, var(--muted-foreground) 85%, transparent); }
+
+/* ---------- 文件面板(右栏: 会话文件 + 工作区树 + 标签页预览) ---------- */
+.file-panel {
+  display: flex; flex-direction: column; min-height: 0;
+  border-left: 1px solid var(--border); background: var(--bg-panel);
+  position: relative;
+}
+.file-panel-resizer {
+  position: absolute; left: -3px; top: 0; bottom: 0; width: 6px;
+  cursor: col-resize; z-index: 5;
+}
+.file-panel-resizer:hover { background: color-mix(in oklch, var(--accent) 25%, transparent); }
+.file-panel-head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; color: var(--text-dim);
+}
+.file-panel-tabs { display: flex; gap: 4px; padding: 6px 10px 0; border-bottom: 1px solid var(--border); }
+.file-mode {
+  padding: 4px 10px; border-radius: 6px 6px 0 0; font-size: 11.5px;
+  color: var(--text-faint); border-bottom: 2px solid transparent;
+}
+.file-mode:hover { color: var(--text-dim); }
+.file-mode.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.file-list { flex: 1; overflow-y: auto; padding: 4px 6px; min-height: 60px; }
+.file-empty { padding: 14px 10px; font-size: 11.5px; color: var(--text-faint); line-height: 1.6; }
+.file-row {
+  display: flex; align-items: center; gap: 6px; width: 100%;
+  padding: 4px 8px; border-radius: 6px; font-size: 12px; color: var(--text-dim);
+  text-align: left;
+}
+.file-row:hover { background: var(--bg-hover); color: var(--text); }
+.file-tree { display: flex; flex-direction: column; }
+.file-tree-dir {
+  display: flex; align-items: center; gap: 5px; width: 100%;
+  padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: var(--text-dim);
+  text-align: left;
+}
+.file-tree-dir:hover { background: var(--bg-hover); }
+.file-tree-file {
+  display: flex; align-items: center; gap: 5px; width: 100%;
+  padding: 3px 8px; border-radius: 6px; font-size: 11.5px; color: var(--text-faint);
+  text-align: left;
+}
+.file-tree-file:hover { background: var(--bg-hover); color: var(--text); }
+.file-tabs { display: flex; gap: 2px; padding: 4px 6px 0; border-top: 1px solid var(--border); overflow-x: auto; }
+.file-tab {
+  display: flex; align-items: center; gap: 4px; max-width: 140px;
+  padding: 3px 8px; border-radius: 6px 6px 0 0; font-size: 11px;
+  color: var(--text-faint); background: transparent; border: 1px solid transparent; border-bottom: none;
+}
+.file-tab.active { background: var(--bg-input); color: var(--text); border-color: var(--border); }
+.file-tab-close { padding: 0 2px; border-radius: 3px; }
+.file-tab-close:hover { background: var(--bg-hover); }
+.file-preview { flex: 1; overflow: auto; border-top: 1px solid var(--border); min-height: 100px; }
+.file-preview pre { margin: 0; padding: 10px 12px; font-size: 11.5px; line-height: 1.55; }

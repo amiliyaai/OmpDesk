@@ -263,8 +263,19 @@ export const ja = {
     zoomOut: '縮小',
     resetZoom: '実際のサイズ',
     fullscreen: '全画面表示',
+    toggleFiles: 'ファイルパネル切替',
     checkUpdates: '更新を確認…',
     about: 'バージョン情報'
+  },
+
+  files: {
+    title: 'ファイル',
+    session: 'セッションファイル',
+    workspace: 'ワークスペース',
+    emptySession: 'セッションにファイルがありません — agent が操作したファイルがここに表示されます',
+    emptyWorkspace: 'ファイルツリーは空です',
+    readFailed: '読み込み失敗: {error}',
+    openFailed: 'ファイルを開けません'
   },
 
   tray: {

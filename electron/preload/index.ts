@@ -46,6 +46,8 @@ const api: OmpApi = {
     ipcRenderer.invoke('omp:setPinned', filePath, pinned),
   getOmpLogs: (count: number) => ipcRenderer.invoke('omp:getOmpLogs', count),
   pickDirectory: () => ipcRenderer.invoke('omp:pickDirectory'),
+  listFiles: (workspace: string) => ipcRenderer.invoke('omp:listFiles', workspace),
+  readFile: (workspace: string, relPath: string) => ipcRenderer.invoke('omp:readFile', workspace, relPath),
   toggleFullScreen: () => ipcRenderer.invoke('window:toggleFullScreen'),
   quit: () => ipcRenderer.invoke('app:quit'),
   showAbout: () => ipcRenderer.invoke('app:showAbout'),

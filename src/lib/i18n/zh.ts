@@ -263,8 +263,19 @@ export const zh = {
     zoomOut: '缩小',
     resetZoom: '实际大小',
     fullscreen: '切换全屏',
+    toggleFiles: '切换文件面板',
     checkUpdates: '检查更新…',
     about: '关于'
+  },
+
+  files: {
+    title: '文件',
+    session: '会话文件',
+    workspace: '工作区',
+    emptySession: '会话暂无文件 — agent 读写文件后会自动出现在这里',
+    emptyWorkspace: '文件树为空',
+    readFailed: '读取失败: {error}',
+    openFailed: '无法打开文件'
   },
 
   tray: {

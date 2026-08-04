@@ -34,6 +34,7 @@ import {
 } from './omp/mcp'
 import { getSkills, toggleSkill } from './omp/skills'
 import { ompVersion } from './omp/locate'
+import { listWorkspaceFiles, readWorkspaceFile } from './omp/fs'
 import { tMain } from './i18n'
 import type {
   AppSettings,
@@ -105,6 +106,16 @@ export function registerIpc(deps: IpcDeps): void {
 
   ipcMain.handle('omp:getSessionDetail', async (_e, filePath: string) => {
     return parseSession(filePath)
+  })
+
+  // ---------- 文件面板(只读) ----------
+
+  ipcMain.handle('omp:listFiles', async (_e, workspace: string) => {
+    return listWorkspaceFiles(workspace)
+  })
+
+  ipcMain.handle('omp:readFile', async (_e, workspace: string, relPath: string) => {
+    return readWorkspaceFile(workspace, relPath)
   })
 
   ipcMain.handle('omp:deleteSession', async (_e, filePath: string) => {

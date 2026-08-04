@@ -5,6 +5,7 @@ import { useStore } from './store'
 import type { UpdaterState } from './shared/types'
 import { Sidebar } from './components/Sidebar'
 import { MenuBar } from './components/MenuBar'
+import { FilePanel } from './components/FilePanel'
 import { ChatView } from './components/ChatView'
 import { Composer } from './components/Composer'
 import { StatusBar } from './components/StatusBar'
@@ -24,6 +25,7 @@ export default function App() {
   const setShowPalette = useStore((s) => s.setShowPalette)
   const chat = useStore((s) => s.chat)
   const switching = useStore((s) => s.switching)
+  const filePanelOpen = useStore((s) => s.filePanelOpen)
   const [update, setUpdate] = useState<UpdaterState | null>(null)
 
   // 启动 + 订阅主进程事件
@@ -113,6 +115,7 @@ export default function App() {
             <ChatView />
             <Composer />
           </section>
+          {filePanelOpen && <FilePanel />}
           <TodoPanel />
         </div>
         <StatusBar />

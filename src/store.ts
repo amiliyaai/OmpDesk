@@ -44,6 +44,26 @@ export interface ChatView {
   model: string | null
 }
 
+/** 工具参数里常见文件字段(渲染端轻量提取, 与主进程 sessions.ts 一致) */
+const FILE_KEYS = new Set(['file_path', 'filePath', 'path', 'file', 'filename', 'glob', 'output_path'])
+
+export function extractToolPaths(args: unknown, depth = 0): string[] {
+  const out: string[] = []
+  if (depth > 6 || args === null || typeof args !== 'object') return out
+  if (Array.isArray(args)) {
+    for (const item of args) out.push(...extractToolPaths(item, depth + 1))
+    return out
+  }
+  for (const [k, v] of Object.entries(args as Record<string, unknown>)) {
+    if (typeof v === 'string' && FILE_KEYS.has(k) && v.length < 4096 && (v.includes('/') || v.includes('\\') || /^[A-Za-z]:[\\/]/.test(v))) {
+      out.push(v)
+    } else if (typeof v === 'object' && v !== null) {
+      out.push(...extractToolPaths(v, depth + 1))
+    }
+  }
+  return out
+}
+
 interface Notice {
   id: number
   level: 'info' | 'warn' | 'error'
@@ -83,6 +103,9 @@ interface State {
   skills: SkillInfo[]
   showSettings: boolean
   showPalette: boolean
+  /** 文件面板: 会话文件列表(agent 读写过)与开关 */
+  sessionFiles: string[]
+  filePanelOpen: boolean
   connected: boolean
   /** 会话切换/进程启动中(给用户反馈, 防"卡死感") */
   switching: boolean
@@ -108,6 +131,7 @@ interface State {
   dispatch: (e: MainEvent) => void
   setShowSettings: (v: boolean) => void
   setShowPalette: (v: boolean) => void
+  setFilePanelOpen: (v: boolean) => void
   refreshProviders: () => Promise<void>
   refreshProfiles: () => Promise<void>
   refreshMcp: () => Promise<void>
@@ -166,6 +190,8 @@ export const useStore = create<State>((set, get) => ({
   skills: [],
   showSettings: false,
   showPalette: false,
+  sessionFiles: [],
+  filePanelOpen: true,
   connected: false,
   switching: false,
   executing: null,
@@ -201,7 +227,8 @@ export const useStore = create<State>((set, get) => ({
     set({
       chat: { messages: [], live: null, status: 'idle', errorText: null, currentFile: null, cwd: ws, model: null },
       todos: [],
-      uiRequests: []
+      uiRequests: [],
+      sessionFiles: []
     })
     await get().refreshSessions()
   },
@@ -225,6 +252,7 @@ export const useStore = create<State>((set, get) => ({
       },
       todos: [],
       uiRequests: [],
+      sessionFiles: detail.files ?? [],
       switching: true // 切换/启动进程期间显示 loading 反馈
     })
     const res = await window.omp.openSession(filePath)
@@ -358,6 +386,7 @@ export const useStore = create<State>((set, get) => ({
 
   setShowSettings: (showSettings) => set({ showSettings }),
   setShowPalette: (showPalette) => set({ showPalette }),
+  setFilePanelOpen: (filePanelOpen) => set({ filePanelOpen }),
 
   refreshProviders: async () => {
     set({ providers: await window.omp.getProviders() })
@@ -544,6 +573,10 @@ function handleFrame(
                   name: String(block.name ?? 'tool'),
                   args: block.arguments ?? {},
                   status: 'pending'
+                }
+                // 实时提取文件路径进文件面板
+                for (const p of extractToolPaths(block.arguments)) {
+                  set((st) => ({ sessionFiles: st.sessionFiles.includes(p) ? st.sessionFiles : [...st.sessionFiles, p] }))
                 }
                 l.toolIndex.set(id, call)
                 l.message.toolCalls = [...l.message.toolCalls, call]

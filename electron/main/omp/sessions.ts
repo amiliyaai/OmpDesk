@@ -103,6 +103,7 @@ export async function parseSession(filePath: string): Promise<SessionDetail | nu
   if (!meta) return null
   const messages: DisplayMessage[] = []
   const toolCallsByClientId = new Map<string, { msgIdx: number; call: DisplayToolCall }>()
+  const sessionFiles = new Set<string>()
   let curModel: string | undefined
   let lastAssistantIdx = -1
 
@@ -144,6 +145,7 @@ export async function parseSession(filePath: string): Promise<SessionDetail | nu
                   args: block.arguments ?? {},
                   status: 'success'
                 }
+                for (const p of extractFilePaths(block.arguments)) sessionFiles.add(p)
                 msg.toolCalls.push(call)
                 toolCallsByClientId.set(callId, { msgIdx: messages.length, call })
               }
@@ -204,7 +206,37 @@ export async function parseSession(filePath: string): Promise<SessionDetail | nu
     }
   }
   void curModel
-  return { meta, messages }
+  return { meta, messages, files: [...sessionFiles] }
+}
+
+// ---------- 会话文件提取 ----------
+
+/** 工具参数里常见文件字段, 防御性提取(键名因 agent 版本而异) */
+const FILE_KEYS = new Set(['file_path', 'filePath', 'path', 'file', 'filename', 'glob', 'output_path'])
+
+function looksLikePath(s: string): boolean {
+  if (!s || s.length > 4096) return false
+  if (/^[~.]?[\\/]/.test(s) || /^[A-Za-z]:[\\/]/.test(s)) return true
+  if (s.includes('/') || s.includes('\\')) return true
+  if (s.endsWith('.md') || s.endsWith('.ts') || s.endsWith('.tsx') || s.endsWith('.js') || s.endsWith('.json')) return true
+  return false
+}
+
+function extractFilePaths(args: unknown, depth = 0): string[] {
+  const out: string[] = []
+  if (depth > 6 || args === null || typeof args !== 'object') return out
+  if (Array.isArray(args)) {
+    for (const item of args) out.push(...extractFilePaths(item, depth + 1))
+    return out
+  }
+  for (const [k, v] of Object.entries(args as Record<string, unknown>)) {
+    if (typeof v === 'string' && FILE_KEYS.has(k) && looksLikePath(v)) {
+      out.push(v)
+    } else if (typeof v === 'object' && v !== null) {
+      out.push(...extractFilePaths(v, depth + 1))
+    }
+  }
+  return out
 }
 
 // ---------- 删除 / 重命名 / 导出 ----------

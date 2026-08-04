@@ -57,6 +57,16 @@ export interface DisplayMessage {
 export interface SessionDetail {
   meta: SessionMeta
   messages: DisplayMessage[]
+  /** 会话中 agent 读写过的文件路径(相对或绝对, 文件面板用) */
+  files?: string[]
+}
+
+// ---------- 文件面板 ----------
+
+export interface WorkspaceFile {
+  name: string
+  relPath: string // 相对 workspace 的路径(正斜杠)
+  type: 'file' | 'dir'
 }
 
 // ---------- UI 请求(extension_ui_request) ----------
@@ -294,6 +304,10 @@ export interface OmpApi {
   setPinned(filePath: string, pinned: boolean): Promise<void>
   getOmpLogs(count: number): Promise<string[]>
   pickDirectory(): Promise<string | null>
+  /** 列出工作区文件树(跳过 node_modules/.git 等, 有数量/深度限制) */
+  listFiles(workspace: string): Promise<WorkspaceFile[]>
+  /** 读取工作区内文件(只读, 防路径穿越, 512KB 上限) */
+  readFile(workspace: string, relPath: string): Promise<{ ok: boolean; content?: string; error?: string }>
   /** 切换窗口全屏 */
   toggleFullScreen(): Promise<void>
   /** 完全退出应用(菜单"退出") */

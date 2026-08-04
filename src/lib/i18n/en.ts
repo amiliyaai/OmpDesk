@@ -263,8 +263,19 @@ export const en = {
     zoomOut: 'Zoom Out',
     resetZoom: 'Actual Size',
     fullscreen: 'Toggle Full Screen',
+    toggleFiles: 'Toggle File Panel',
     checkUpdates: 'Check for Updates…',
     about: 'About'
+  },
+
+  files: {
+    title: 'Files',
+    session: 'Session Files',
+    workspace: 'Workspace',
+    emptySession: 'No session files yet — files the agent touches will appear here',
+    emptyWorkspace: 'File tree is empty',
+    readFailed: 'Read failed: {error}',
+    openFailed: 'Cannot open file'
   },
 
   tray: {

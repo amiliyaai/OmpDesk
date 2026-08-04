@@ -18,6 +18,8 @@ export function MenuBar() {
   const newSession = useStore((s) => s.newSession)
   const setSettings = useStore((s) => s.setSettings)
   const setShowSettings = useStore((s) => s.setShowSettings)
+  const filePanelOpen = useStore((s) => s.filePanelOpen)
+  const setFilePanelOpen = useStore((s) => s.setFilePanelOpen)
   const [open, setOpen] = useState<string | null>(null)
 
   const openFolder = (): void => {
@@ -69,6 +71,8 @@ export function MenuBar() {
       id: 'view',
       label: t('menubar.view'),
       items: [
+        { label: t('menubar.toggleFiles'), shortcut: 'Ctrl+Shift+E', action: () => setFilePanelOpen(!filePanelOpen) },
+        'sep',
         { label: t('menubar.zoomIn'), shortcut: 'Ctrl+Shift+=', action: zoom(1.1) },
         { label: t('menubar.zoomOut'), shortcut: 'Ctrl+-', action: zoom(1 / 1.1) },
         { label: t('menubar.resetZoom'), shortcut: 'Ctrl+0', action: () => { document.body.style.zoom = '' } },
