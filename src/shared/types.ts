@@ -150,6 +150,9 @@ export type ApprovalMode = 'always-ask' | 'write' | 'yolo'
 /** 应用 UI 语言 */
 export type Language = 'zh-CN' | 'en' | 'ja'
 
+/** Agent 后端: omp(oh-my-pi) 与 pi(earendil-works) 同源 */
+export type AgentBackendId = 'omp' | 'pi'
+
 export interface AppSettings {
   theme: 'dark' | 'light' | 'system'
   fontScale: number // 0.9 ~ 1.2
@@ -162,6 +165,8 @@ export interface AppSettings {
   hotkey: string
   /** 应用 UI 语言(缺省 zh-CN) */
   language?: Language
+  /** Agent 后端(auto = omp 优先, 缺省) */
+  backend?: 'auto' | AgentBackendId
   /** 关闭窗口→托盘的首开提示是否已展示过 */
   trayHintShown?: boolean
 }

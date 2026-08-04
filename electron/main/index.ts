@@ -15,8 +15,9 @@ import { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import { OmpPool } from './omp/pool'
-import { locateOmp } from './omp/locate'
+import { locateAgent } from './omp/locate'
 import { readSettings, writeSettings } from './omp/config'
+import { getBackend, resolveBackendId, setBackend } from './omp/backend'
 import { registerIpc } from './ipc'
 import { checkForUpdates, quitAndInstall, setupUpdater } from './updater'
 import { setLocale, tMain } from './i18n'
@@ -50,10 +51,11 @@ if (!gotLock) {
 async function bootstrap(): Promise<void> {
   await app.whenReady()
 
-  // 1) 定位 omp
-  ompBin = (await locateOmp()) ?? ''
+  // 1) 定位 agent 二进制(按设置的 backend)
   settings = await readSettings()
   setLocale(settings.language ?? 'zh-CN')
+  setBackend(resolveBackendId(settings.backend))
+  ompBin = (await locateAgent()) ?? ''
   if (ompBin) {
     settings = await writeSettings({ ompPath: ompBin, ompAutoDetected: true })
   }
@@ -87,8 +89,21 @@ async function bootstrap(): Promise<void> {
     getWorkspace: () => settings.defaultWorkspace,
     notifySessionsChanged: () => sendToWindow({ type: 'sessions:changed' }),
     notifySettingsChanged: (s) => {
+      const backendChanged = resolveBackendId(s.backend) !== resolveBackendId(settings.backend)
       settings = s
       setLocale(s.language ?? 'zh-CN')
+      if (backendChanged) {
+        // 后端切换: 重建池 + 按新后端重新探测二进制
+        setBackend(resolveBackendId(s.backend))
+        void (async () => {
+          ompBin = (await locateAgent()) ?? ''
+          const updated = await writeSettings({ ompPath: ompBin, ompAutoDetected: Boolean(ompBin) })
+          settings = updated
+          sendToWindow({ type: 'settings:changed', settings: updated })
+        })()
+        createPool()
+        sendToWindow({ type: 'sessions:changed' })
+      }
       sendToWindow({ type: 'settings:changed', settings: s })
       registerHotkey()
       rebuildTrayMenu()
@@ -111,6 +126,7 @@ function createPool(): void {
   pool = new OmpPool({
     bin: ompBin,
     approvalMode: settings.approvalMode || undefined,
+    backend: getBackend(),
     max: settings.maxPoolProcesses,
     idleMs: settings.idleKillMinutes,
     onFrame: (cwd, frame) => {
@@ -406,7 +422,7 @@ function sendToWindow(e: MainEvent): void {
 
 async function readLogTail(count: number): Promise<string[]> {
   try {
-    const logDir = path.join(os.homedir(), '.omp', 'logs')
+    const logDir = getBackend().logDir()
     const files = (await fsp.readdir(logDir))
       .filter((f) => f.endsWith('.log'))
       .sort()

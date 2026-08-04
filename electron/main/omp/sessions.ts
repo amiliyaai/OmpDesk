@@ -4,6 +4,7 @@ import { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import { sessionsRoot } from './locate'
+import { getBackend } from './backend'
 import type {
   DisplayMessage,
   DisplayToolCall,
@@ -286,7 +287,7 @@ export async function exportSession(
 ): Promise<{ ok: boolean; path?: string; error?: string }> {
   const out = filePath.replace(/\.jsonl$/i, '') + '.html'
   try {
-    await execFileAsync(bin, ['--export', filePath, out], { timeout: 60_000 })
+    await execFileAsync(bin, [...getBackend().exportArgs(filePath), out], { timeout: 60_000 })
     return { ok: true, path: out }
   } catch (e) {
     return { ok: false, error: (e as Error).message }

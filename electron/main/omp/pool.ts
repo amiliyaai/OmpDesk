@@ -1,9 +1,11 @@
 import { OmpClient } from './client'
+import type { AgentBackend } from './backend'
 
 export interface PoolOptions {
   bin: string
   sessionDir?: string
   approvalMode?: string
+  backend?: AgentBackend
   max?: number
   idleMs?: number
   onFrame?: (cwd: string, frame: Record<string, unknown>) => void
@@ -59,7 +61,8 @@ export class OmpPool {
         bin: this.opts.bin,
         cwd,
         sessionDir: this.opts.sessionDir,
-        approvalMode: this.opts.approvalMode
+        approvalMode: this.opts.approvalMode,
+        backend: this.opts.backend
       })
       client.on('stderr', (d: string) => {
         this.opts.onStderr?.(cwd, d)

@@ -1,6 +1,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import { FrameDecoder } from './protocol'
+import type { AgentBackend } from './backend'
 import type { UiRequest } from '../../../src/shared/types'
 
 export interface OmpClientOptions {
@@ -8,6 +9,7 @@ export interface OmpClientOptions {
   cwd: string
   sessionDir?: string
   approvalMode?: string
+  backend?: AgentBackend
 }
 
 interface Pending {
@@ -49,9 +51,10 @@ export class OmpClient extends EventEmitter {
   }
 
   async start(): Promise<void> {
-    const args = ['--mode', 'rpc-ui', '--cwd', this.opts.cwd]
-    if (this.opts.sessionDir) args.push('--session-dir', this.opts.sessionDir)
-    if (this.opts.approvalMode) args.push('--approval-mode', this.opts.approvalMode)
+    const backend = this.opts.backend
+    const args = backend
+      ? backend.spawnArgs(this.opts.cwd, this.opts.sessionDir, this.opts.approvalMode)
+      : ['--mode', 'rpc-ui', '--cwd', this.opts.cwd]
 
     const child = spawn(this.opts.bin, args, {
       cwd: this.opts.cwd,
@@ -112,8 +115,10 @@ export class OmpClient extends EventEmitter {
         const waiters = this.readyWaiters
         this.readyWaiters = []
         for (const w of waiters) w()
-        // 协商 v2 大帧协议
-        this.sendRaw({ id: 'protocol-1', type: 'negotiate_protocol', protocolVersion: 2 })
+        // 协商 v2 大帧协议(后端不支持或协商失败时自动忽略, 走基础协议)
+        if (this.opts.backend?.supportsProtocolV2 !== false) {
+          this.sendRaw({ id: 'protocol-1', type: 'negotiate_protocol', protocolVersion: 2 })
+        }
         break
       }
       case 'response': {
@@ -218,6 +223,11 @@ export class OmpClient extends EventEmitter {
 
   async abortAndPrompt(message: string): Promise<unknown> {
     this.busy = true
+    // pi 原生 rpc 无 abort_and_prompt(omp fork 扩展): 拆成 abort + prompt
+    if (this.opts.backend?.supportsAbortAndPrompt === false) {
+      await this.request('abort', {}, 8_000).catch(() => null)
+      return this.request('prompt', { message, streamingBehavior: 'steer' }, 0)
+    }
     return this.request('abort_and_prompt', { message, streamingBehavior: 'steer' }, 0)
   }
 

@@ -216,6 +216,7 @@ export function SettingsModal() {
   const toggleSkill = useStore((s) => s.toggleSkill)
   const addNotice = useStore((s) => s.addNotice)
   const confirm = useStore((s) => s.confirm)
+  const chat = useStore((s) => s.chat)
   const [tab, setTab] = useState<TabId>('general')
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [showMcpForm, setShowMcpForm] = useState(false)
@@ -484,13 +485,45 @@ export function SettingsModal() {
 
             {tab === 'usage' && (
               <div className="settings-section">
-                <div className="section-hint">{t('settings.usagePlaceholder')}</div>
+                <div className="section-title">{t('settings.tabUsage')}</div>
+                {(() => {
+                  let input = 0
+                  let output = 0
+                  for (const m of chat?.messages ?? []) {
+                    if (m.usage) {
+                      input += m.usage.input
+                      output += m.usage.output
+                    }
+                  }
+                  if (input + output > 0) {
+                    return (
+                      <div className="section-hint">
+                        {t('settings.usageCurrent', {
+                          in: input.toLocaleString(),
+                          out: output.toLocaleString(),
+                          total: (input + output).toLocaleString()
+                        })}
+                      </div>
+                    )
+                  }
+                  return <div className="section-hint">{t('settings.usagePlaceholder')}</div>
+                })()}
               </div>
             )}
 
             {tab === 'backend' && (
               <div className="settings-section">
-                <div className="section-hint">{t('settings.backendPlaceholder')}</div>
+                <div className="section-title">{t('settings.backendAgent')}</div>
+                <FieldSelect
+                  value={settings.backend ?? 'auto'}
+                  onChange={(v) => { void setSettings({ backend: v as never }); flashSaved() }}
+                  options={[
+                    { value: 'auto', label: t('settings.backendAuto') },
+                    { value: 'omp', label: 'omp (oh-my-pi)' },
+                    { value: 'pi', label: 'pi (earendil-works)' }
+                  ]}
+                />
+                <div className="section-hint">{t('settings.backendHint')}</div>
               </div>
             )}
 

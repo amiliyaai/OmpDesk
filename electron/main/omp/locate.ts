@@ -3,15 +3,19 @@ import { existsSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
+import { getBackend, type AgentBackend } from './backend'
+
+export { agentDir, sessionsRoot } from './backend'
 
 const execFileAsync = promisify(execFile)
 
-/** 三平台 omp 二进制定位: PATH → 常见安装位置 */
-export async function locateOmp(): Promise<string | null> {
+/** 三平台 agent 二进制定位: PATH → 常见安装位置(按后端 binName) */
+export async function locateAgent(backend?: AgentBackend): Promise<string | null> {
+  const binName = (backend ?? getBackend()).binName
   // 1) PATH 中查找
   try {
     const cmd = process.platform === 'win32' ? 'where' : 'which'
-    const { stdout } = await execFileAsync(cmd, ['omp'], { timeout: 10_000 })
+    const { stdout } = await execFileAsync(cmd, [binName], { timeout: 10_000 })
     const first = stdout
       .split(/\r?\n/)
       .map((s) => s.trim())
@@ -26,17 +30,22 @@ export async function locateOmp(): Promise<string | null> {
   const candidates: string[] = []
   if (process.platform === 'win32') {
     const la = process.env.LOCALAPPDATA
-    if (la) candidates.push(path.join(la, 'omp', 'omp.exe'))
-    candidates.push(path.join(home, 'AppData', 'Local', 'omp', 'omp.exe'))
+    if (la) candidates.push(path.join(la, binName, `${binName}.exe`))
+    candidates.push(path.join(home, 'AppData', 'Local', binName, `${binName}.exe`))
   } else if (process.platform === 'darwin') {
-    candidates.push('/opt/homebrew/bin/omp', '/usr/local/bin/omp')
+    candidates.push(`/opt/homebrew/bin/${binName}`, `/usr/local/bin/${binName}`)
   } else {
-    candidates.push(path.join(home, '.local', 'bin', 'omp'))
+    candidates.push(path.join(home, '.local', 'bin', binName))
   }
   for (const c of candidates) {
     if (existsSync(c)) return c
   }
   return null
+}
+
+/** 兼容旧调用(默认后端) */
+export async function locateOmp(): Promise<string | null> {
+  return locateAgent()
 }
 
 export async function ompVersion(bin: string): Promise<string | undefined> {
@@ -46,17 +55,6 @@ export async function ompVersion(bin: string): Promise<string | undefined> {
   } catch {
     return undefined
   }
-}
-
-/** omp 会话存储根目录(与 omp 约定一致,可用 PI_CODING_AGENT_DIR 覆盖) */
-export function agentDir(): string {
-  const override = process.env.PI_CODING_AGENT_DIR
-  if (override) return override
-  return path.join(os.homedir(), '.omp', 'agent')
-}
-
-export function sessionsRoot(): string {
-  return path.join(agentDir(), 'sessions')
 }
 
 /** 会话目录下的工作区 slug 目录名 → 展示用工作目录(cwd 存在则取真实路径) */
