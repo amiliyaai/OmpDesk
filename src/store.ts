@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { toast } from 'sonner'
 import type {
   AppSettings,
   CommandInfo,
@@ -43,6 +44,8 @@ interface Notice {
   text: string
 }
 
+export type NoticeLevel = Notice['level']
+
 /** 自定义确认弹窗请求(替代原生 confirm) */
 export interface ConfirmRequest {
   id: number
@@ -72,7 +75,6 @@ interface State {
   profileApproval: string
   mcps: McpServerInfo[]
   skills: SkillInfo[]
-  notices: Notice[]
   showSettings: boolean
   showPalette: boolean
   connected: boolean
@@ -113,7 +115,6 @@ interface State {
   saveProfile: (p: Parameters<typeof window.omp.saveProfile>[0]) => Promise<void>
   deleteProfile: (id: string) => Promise<void>
   addNotice: (level: Notice['level'], text: string) => void
-  dismissNotice: (id: number) => void
   confirm: (req: Omit<ConfirmRequest, 'id'>) => void
   resolveConfirm: (id: number, ok: boolean) => void
 }
@@ -157,7 +158,6 @@ export const useStore = create<State>((set, get) => ({
   profileApproval: '',
   mcps: [],
   skills: [],
-  notices: [],
   showSettings: false,
   showPalette: false,
   connected: false,
@@ -414,14 +414,11 @@ export const useStore = create<State>((set, get) => ({
   },
 
   addNotice: (level, text) => {
-    const id = noticeSeq++
-    set((s) => ({ notices: [...s.notices.slice(-4), { id, level, text }] }))
-    setTimeout(() => {
-      set((s) => ({ notices: s.notices.filter((n) => n.id !== id) }))
-    }, 6000)
+    const opts = { duration: 6000 }
+    if (level === 'error') toast.error(text, opts)
+    else if (level === 'warn') toast.warning(text, opts)
+    else toast.info(text, opts)
   },
-
-  dismissNotice: (id) => set((s) => ({ notices: s.notices.filter((n) => n.id !== id) })),
 
   confirm: (req) => {
     const id = noticeSeq++

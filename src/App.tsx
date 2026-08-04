@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Info, Loader2, X } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { Toaster } from 'sonner'
 import { useStore } from './store'
 import type { UpdaterState } from './shared/types'
 import { Sidebar } from './components/Sidebar'
@@ -17,8 +18,6 @@ export default function App() {
   const booted = useStore((s) => s.booted)
   const dispatch = useStore((s) => s.dispatch)
   const settings = useStore((s) => s.settings)
-  const notices = useStore((s) => s.notices)
-  const dismissNotice = useStore((s) => s.dismissNotice)
   const setShowPalette = useStore((s) => s.setShowPalette)
   const chat = useStore((s) => s.chat)
   const switching = useStore((s) => s.switching)
@@ -132,18 +131,14 @@ export default function App() {
         </div>
       )}
 
-      {/* 通知 */}
-      <div className="notices">
-        {notices.map((n) => (
-          <div key={n.id} className={`notice ${n.level}`}>
-            {n.level === 'error' ? <AlertTriangle size={14} /> : <Info size={14} />}
-            <span className="notice-text">{n.text}</span>
-            <button className="icon-btn" onClick={() => dismissNotice(n.id)}>
-              <X size={12} />
-            </button>
-          </div>
-        ))}
-      </div>
+      {/* 通知 (sonner) */}
+      <Toaster
+        position="top-right"
+        theme={settings?.theme === 'light' ? 'light' : 'dark'}
+        toastOptions={{
+          style: { fontSize: '12.5px', borderRadius: '10px' }
+        }}
+      />
     </div>
   )
 }
