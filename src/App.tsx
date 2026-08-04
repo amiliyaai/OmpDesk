@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertTriangle, Info, X } from 'lucide-react'
 import { useStore } from './store'
+import type { UpdaterState } from './shared/types'
 import { Sidebar } from './components/Sidebar'
 import { ChatView } from './components/ChatView'
 import { Composer } from './components/Composer'
@@ -19,11 +20,18 @@ export default function App() {
   const dismissNotice = useStore((s) => s.dismissNotice)
   const setShowPalette = useStore((s) => s.setShowPalette)
   const chat = useStore((s) => s.chat)
+  const [update, setUpdate] = useState<UpdaterState | null>(null)
 
   // 启动 + 订阅主进程事件
   useEffect(() => {
     void boot()
-    const off = window.omp.onEvent((e) => dispatch(e))
+    const off = window.omp.onEvent((e) => {
+      if (e.type === 'updater:state') {
+        setUpdate(e.state)
+        return
+      }
+      dispatch(e)
+    })
     return off
   }, [boot, dispatch])
 
@@ -93,6 +101,26 @@ export default function App() {
       </main>
       <SettingsModal />
       <CommandPalette />
+
+      {/* 自动更新 banner(下载完成后提示重启安装) */}
+      {update?.phase === 'downloaded' && (
+        <div className="update-banner">
+          <span>
+            新版本 <b>v{update.version}</b> 已下载, 重启后生效
+          </span>
+          <div className="update-banner-actions">
+            <button className="btn primary small" onClick={() => void window.omp.quitAndInstall()}>
+              重启安装
+            </button>
+            <button
+              className="btn small"
+              onClick={() => setUpdate((u) => (u?.phase === 'downloaded' ? { ...u, phase: 'idle' } : u))}
+            >
+              稍后
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 通知 */}
       <div className="notices">

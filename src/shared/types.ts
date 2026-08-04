@@ -227,6 +227,17 @@ export type MainEvent =
   | { type: 'ui:resolved'; id: string }
   | { type: 'notice'; level: 'info' | 'warn' | 'error'; text: string }
   | { type: 'app:new-session' }
+  | { type: 'updater:state'; state: UpdaterState }
+
+// ---------- 自动更新状态 ----------
+
+export type UpdaterState =
+  | { phase: 'idle' }
+  | { phase: 'checking' }
+  | { phase: 'up-to-date'; version: string }
+  | { phase: 'downloading'; version: string }
+  | { phase: 'downloaded'; version: string; notes?: string }
+  | { phase: 'error'; message: string }
 
 // ---------- 启动数据 ----------
 
@@ -271,6 +282,8 @@ export interface OmpApi {
   respondUi(id: string, payload: UiResponsePayload): Promise<void>
   setPinned(filePath: string, pinned: boolean): Promise<void>
   getOmpLogs(count: number): Promise<string[]>
+  checkForUpdates(): Promise<void>
+  quitAndInstall(): Promise<void>
   onEvent(cb: (e: MainEvent) => void): () => void
 }
 

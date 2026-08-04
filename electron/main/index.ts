@@ -1,10 +1,12 @@
 import {
   app,
   BrowserWindow,
+  dialog,
   globalShortcut,
   Menu,
   nativeImage,
   Notification,
+  shell,
   Tray
 } from 'electron'
 import { promises as fsp } from 'node:fs'
@@ -14,7 +16,8 @@ import { OmpPool } from './omp/pool'
 import { locateOmp } from './omp/locate'
 import { readSettings, writeSettings } from './omp/config'
 import { registerIpc } from './ipc'
-import type { AppSettings, MainEvent } from '../../src/shared/types'
+import { checkForUpdates, quitAndInstall, setupUpdater } from './updater'
+import type { AppSettings, MainEvent, UpdaterState } from '../../src/shared/types'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -54,7 +57,21 @@ async function bootstrap(): Promise<void> {
   // 2) 进程池
   createPool()
 
-  // 3) 窗口 / 托盘 / 快捷键 / IPC
+  // 3) 自动更新(仅打包版生效) + macOS 关于面板
+  if (process.platform === 'darwin') {
+    app.setAboutPanelOptions({
+      applicationName: 'OmpDesk',
+      applicationVersion: app.getVersion(),
+      copyright: '© amiliyaai · MIT License',
+      credits: 'A desktop GUI for oh-my-pi (omp) — github.com/amiliyaai/OmpDesk'
+    })
+  }
+  setupUpdater({
+    getWindow: () => mainWindow,
+    onState: (state: UpdaterState) => sendToWindow({ type: 'updater:state', state })
+  })
+
+  // 4) 窗口 / 托盘 / 快捷键 / IPC
   createWindow()
   createTray()
   registerHotkey()
@@ -70,7 +87,8 @@ async function bootstrap(): Promise<void> {
       rebuildTrayMenu()
     },
     notifyModels: (models) => sendToWindow({ type: 'models:available', models: models as never }),
-    getLogTail: readLogTail
+    getLogTail: readLogTail,
+    updater: { check: checkForUpdates, quitAndInstall }
   })
 
   app.on('activate', () => {
@@ -194,9 +212,35 @@ function rebuildTrayMenu(): void {
       }
     },
     { type: 'separator' },
+    { label: '检查更新…', click: () => checkForUpdates(true) },
+    { label: '关于 OmpDesk', click: () => showAboutDialog() },
+    { type: 'separator' },
     { label: '退出', click: () => { isQuitting = true; app.quit() } }
   ])
   tray.setContextMenu(menu)
+}
+
+// ---------- 关于 ----------
+
+function showAboutDialog(): void {
+  void dialog.showMessageBox({
+    type: 'info',
+    title: '关于 OmpDesk',
+    message: 'OmpDesk',
+    detail: [
+      `版本 ${app.getVersion()}`,
+      '',
+      'oh-my-pi (omp) 的桌面 GUI 客户端 —— 给终端 AI 编程助手一个家。',
+      '',
+      '© amiliyaai · MIT License',
+      'github.com/amiliyaai/OmpDesk'
+    ].join('\n'),
+    buttons: ['打开 GitHub', '关闭'],
+    defaultId: 1,
+    cancelId: 1
+  }).then((r) => {
+    if (r.response === 0) void shell.openExternal('https://github.com/amiliyaai/OmpDesk')
+  })
 }
 
 // ---------- 全局快捷键 ----------

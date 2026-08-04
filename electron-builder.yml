@@ -12,6 +12,17 @@ extraResources:
   - from: resources/icon.png
     to: resources/icon.png
 asar: true
+# 打包速度: asar 不压缩(JS/CSS 已 minify, 体积差异 ~10%, 打包更快、启动更快)。
+# 追求最小体积可改回 normal/maximum(打包时间随之增加)。
+compression: store
+
+# 自动更新源: GitHub Releases
+# - 构建时生成 latest.yml / latest-mac.yml / latest-linux.yml(含文件哈希, 供 electron-updater 使用)
+# - CI 发布时由 .github/workflows/release.yml 一并上传(见 RELEASE.md)
+publish:
+  provider: github
+  owner: amiliyaai
+  repo: OmpDesk
 
 win:
   target:
@@ -26,6 +37,7 @@ nsis:
 mac:
   target:
     - dmg
+    - zip # zip 供 electron-updater 增量更新(mac 自动更新的必需产物)
   icon: resources/icon.png
   category: public.app-category.developer-tools
   artifactName: OmpDesk-${version}-mac-${arch}.${ext}
@@ -39,5 +51,10 @@ linux:
   icon: resources/icon.png
   category: Development
   artifactName: OmpDesk-${version}-linux-${arch}.${ext}
+deb:
+  # xz 压缩极慢, 改 gz: deb 制作提速数倍(体积略增)
+  compression: gz
 
 # 图标注: mac/linux 正式打包建议替换为 1024x1024 icns/png
+# 签名注: CI 默认未签名构建(win 自动跳过, mac 设 CSC_IDENTITY_AUTO_DISCOVERY=false)。
+#          mac 自动更新需要 Developer ID 签名, 接入证书后设置 CSC_LINK/CSC_KEY_PASSWORD 并移除该环境变量。

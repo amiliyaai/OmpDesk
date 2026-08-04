@@ -114,7 +114,8 @@ function encodeIco(png256) {
 }
 
 mkdirSync(outDir, { recursive: true })
-writeFileSync(join(outDir, 'icon.png'), drawIcon(256))
+// icon.png 需 1024x1024(mac/linux 打包要求 >=512), ICO 内嵌 256 PNG(现代 Windows 支持)
+writeFileSync(join(outDir, 'icon.png'), drawIcon(1024))
 writeFileSync(join(outDir, 'icon16.png'), drawIcon(16))
 writeFileSync(join(outDir, 'icon32.png'), drawIcon(32))
 writeFileSync(join(outDir, 'icon.ico'), encodeIco(drawIcon(256)))

@@ -482,6 +482,17 @@ textarea { resize: none; }
 .notice.warn svg { color: var(--amber); }
 .notice-text { flex: 1; word-break: break-all; }
 
+/* ---------- 自动更新 banner ---------- */
+.update-banner {
+  position: fixed; bottom: 64px; left: 50%; transform: translateX(-50%);
+  z-index: 90; display: flex; align-items: center; gap: 14px;
+  background: var(--bg-panel); border: 1px solid var(--accent);
+  border-radius: 10px; padding: 8px 12px; font-size: 12.5px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+.update-banner b { color: var(--accent); }
+.update-banner-actions { display: flex; gap: 8px; }
+
 /* ---------- 模态框 / 设置 ---------- */
 .modal-overlay, .palette-overlay {
   position: fixed; inset: 0; z-index: 100;

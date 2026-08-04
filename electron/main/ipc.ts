@@ -50,6 +50,10 @@ export interface IpcDeps {
   notifySettingsChanged: (s: AppSettings) => void
   notifyModels: (models: unknown[]) => void
   getLogTail: (count: number) => Promise<string[]>
+  updater: {
+    check: (manual: boolean) => void
+    quitAndInstall: () => void
+  }
 }
 
 let pinnedFile = ''
@@ -283,6 +287,15 @@ export function registerIpc(deps: IpcDeps): void {
     const r = await setCfgApprovalMode(mode)
     if (r.ok) await pool.restartAll()
     return r
+  })
+
+  // ---------- 自动更新 ----------
+
+  ipcMain.handle('updater:check', async () => {
+    deps.updater.check(true)
+  })
+  ipcMain.handle('updater:quitAndInstall', async () => {
+    deps.updater.quitAndInstall()
   })
 }
 

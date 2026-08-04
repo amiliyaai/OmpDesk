@@ -1,0 +1,125 @@
+# Release workflow
+# 推送 v* tag 时自动构建三端产物并发布 GitHub Release。
+# Release notes 从 CHANGELOG.md 自动提取(scripts/extract-changelog.mjs),
+# 产物(安装包 + latest*.yml 更新元数据)由 electron-updater 消费, 支持应用内自动更新。
+#
+# 发布步骤见 RELEASE.md。
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  # ---------- 三端构建 ----------
+
+  build-windows:
+    name: Build Windows (NSIS)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Cache toolchain downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: ${{ runner.os }}-toolchain-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      # typecheck 平台无关, 三端同一份代码, 只在此跑一次
+      - run: npm run typecheck
+      - run: npm run build:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-windows
+          path: release/*
+          if-no-files-found: error
+
+  build-macos:
+    name: Build macOS (universal)
+    runs-on: macos-14
+    env:
+      # 未签名构建(配置 Developer ID 证书后移除)
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Cache toolchain downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/electron
+            ~/Library/Caches/electron-builder
+          key: ${{ runner.os }}-toolchain-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      # universal = arm64 + x64 单包, latest-mac.yml 单份更新元数据
+      - run: npx electron-vite build && npx electron-builder --mac --universal
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-macos
+          path: release/*
+          if-no-files-found: error
+
+  build-linux:
+    name: Build Linux (AppImage + deb)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Cache toolchain downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: ${{ runner.os }}-toolchain-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npm run build:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-linux
+          path: release/*
+          if-no-files-found: error
+
+  # ---------- 汇总发布 ----------
+
+  release:
+    name: Create GitHub Release
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Extract changelog section
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          node scripts/extract-changelog.mjs "$VERSION" > notes.md
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "OmpDesk v$VERSION" \
+            --notes-file notes.md \
+            dist/*

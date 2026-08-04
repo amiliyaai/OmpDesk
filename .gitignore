@@ -25,3 +25,7 @@ Thumbs.db
 # electron-builder
 *.icns
 *.ico.swp
+
+# Test artifacts
+shots/
+release/
