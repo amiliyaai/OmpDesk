@@ -320,5 +320,22 @@ export const zh = {
   ipc: {
     parseFailed: '会话文件无法解析',
     pickDirTitle: '选择工作目录'
+  },
+
+  errors: {
+    processExited: 'omp 进程退出 (code={code}, signal={signal})',
+    readyTimeout: '等待 omp ready 超时 ({ms}ms)',
+    commandFailed: 'omp 命令失败',
+    processNotRunning: 'omp 进程未运行',
+    commandTimeout: '等待命令 {command} 响应超时',
+    toolFailed: '工具执行失败',
+    sessionCompacted: '会话已压缩: {summary}',
+    illegalPath: '非法路径',
+    emptyTitle: '标题不能为空',
+    profileMissing: '方案不存在',
+    decryptFailed: '无法解密 API key(系统加密不可用或密钥已失效)',
+    pathEscape: '路径越界',
+    notFile: '不是文件',
+    fileTooLarge: '文件超过 {kb}KB 限制'
   }
 } as const

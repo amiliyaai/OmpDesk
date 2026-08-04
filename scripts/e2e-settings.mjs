@@ -1,21 +1,25 @@
 /**
  * E2E 设置与辅助功能:
- * 1. 打开设置弹窗 → 五个 tab 内容验证(模型服务/方案/MCP/Skills/外观/数据)
- * 2. Ctrl+K 命令面板
- * 3. 模型下拉
- * 4. 全流程无控制台错误
+ * 1. 打开设置弹窗 → 分组 tab 内容验证(Codex 式: 常规/外观/模型/集成/数据/用量/后端/关于)
+ * 2. 菜单栏(视图菜单)与文件面板(工作区树)
+ * 3. Ctrl+K 命令面板
+ * 4. 模型下拉
+ * 5. 全流程无控制台错误
+ * 隔离 userData, 避免本机持久化设置(语言等)影响断言
  */
 import { _electron as electron } from 'playwright-core'
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const shotDir = join(root, 'shots')
 mkdirSync(shotDir, { recursive: true })
+const userData = mkdtempSync(join(tmpdir(), 'ompdesk-e2e-'))
 
 const app = await electron.launch({
-  args: [join(root, 'out', 'main', 'index.js')],
+  args: [join(root, 'out', 'main', 'index.js'), `--user-data-dir=${userData}`],
   cwd: root,
   env: { ...process.env, NODE_ENV: 'production' }
 })
@@ -73,6 +77,29 @@ await win.waitForTimeout(300)
 await win.keyboard.press('Escape')
 await win.waitForTimeout(400)
 check('设置关闭', (await win.locator('.modal').count()) === 0)
+
+// ---------- 菜单栏(视图菜单) ----------
+console.log('── 菜单栏 ──')
+await win.waitForSelector('.menubar', { timeout: 3000 })
+check('菜单栏渲染', true)
+await win.click('.menubar-item:has-text("视图")')
+await win.waitForTimeout(400)
+const menuItems = await win.locator('.menubar-menu [role="menuitem"]').count()
+check('视图菜单打开', menuItems > 0)
+check('切换文件面板项存在', (await win.locator('.menubar-menu [role="menuitem"]:has-text("文件面板")').count()) === 1)
+await win.keyboard.press('Escape')
+await win.waitForTimeout(300)
+
+// ---------- 文件面板(工作区文件树) ----------
+console.log('── 文件面板 ──')
+await win.waitForSelector('.file-panel', { timeout: 3000 })
+check('文件面板渲染', true)
+await win.click('.file-mode:has-text("工作区")')
+await win.waitForTimeout(1000)
+const treeRows = await win.locator('.file-tree-dir, .file-tree-file').count()
+console.log('  workspace tree rows:', treeRows)
+check('工作区文件树加载', treeRows > 0)
+await win.screenshot({ path: join(shotDir, 'file-panel.png') })
 
 // ---------- 命令面板 ----------
 console.log('── 命令面板 ──')

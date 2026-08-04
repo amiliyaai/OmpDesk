@@ -18,12 +18,13 @@ const api: OmpApi = {
   exportSession: (filePath: string) => ipcRenderer.invoke('omp:exportSession', filePath),
   newSession: (workspace: string) => ipcRenderer.invoke('omp:newSession', workspace),
   openSession: (filePath: string) => ipcRenderer.invoke('omp:openSession', filePath),
-  sendPrompt: (text: string, images?: string[]) =>
-    ipcRenderer.invoke('omp:sendPrompt', text, images),
+  sendPrompt: (text: string, images?: string[], workspace?: string) =>
+    ipcRenderer.invoke('omp:sendPrompt', text, images, workspace),
   abort: () => ipcRenderer.invoke('omp:abort'),
   getModels: () => ipcRenderer.invoke('omp:getModels'),
   setModel: (provider: string, modelId: string) =>
     ipcRenderer.invoke('omp:setModel', provider, modelId),
+  setApprovalMode: (mode) => ipcRenderer.invoke('omp:setApprovalMode', mode),
   getSettings: () => ipcRenderer.invoke('omp:getSettings'),
   setSettings: (patch: Partial<AppSettings>) => ipcRenderer.invoke('omp:setSettings', patch),
   getProviders: () => ipcRenderer.invoke('omp:getProviders'),
@@ -49,6 +50,8 @@ const api: OmpApi = {
   listFiles: (workspace: string) => ipcRenderer.invoke('omp:listFiles', workspace),
   readFile: (workspace: string, relPath: string) => ipcRenderer.invoke('omp:readFile', workspace, relPath),
   toggleFullScreen: () => ipcRenderer.invoke('window:toggleFullScreen'),
+  zoom: (delta: number) => ipcRenderer.invoke('window:zoom', delta),
+  zoomReset: () => ipcRenderer.invoke('window:zoomReset'),
   quit: () => ipcRenderer.invoke('app:quit'),
   showAbout: () => ipcRenderer.invoke('app:showAbout'),
   getVersion: () => ipcRenderer.invoke('app:getVersion'),

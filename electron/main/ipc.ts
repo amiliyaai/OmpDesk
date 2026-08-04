@@ -167,9 +167,10 @@ export function registerIpc(deps: IpcDeps): void {
     }
   })
 
-  ipcMain.handle('omp:sendPrompt', async (_e, text: string, images?: string[]) => {
+  ipcMain.handle('omp:sendPrompt', async (_e, text: string, images: string[] | undefined, workspace: string | undefined) => {
     try {
-      const client = await pool.get(getWorkspace())
+      // 目标工作区由渲染端传入(会话自身的 cwd), 与 newSession/openSession 保持一致
+      const client = await pool.get(workspace ?? getWorkspace())
       await client.prompt(text, images)
       return { ok: true }
     } catch (e) {

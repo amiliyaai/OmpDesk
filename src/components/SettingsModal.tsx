@@ -349,7 +349,15 @@ export function SettingsModal() {
                 <FieldSelect
                   value={settings.approvalMode || profileApproval || ''}
                   onChange={(v) => {
-                    void setSettings({ approvalMode: v as ApprovalMode }).then(() => addNotice('info', t('notices.approvalUpdated')))
+                    // 写 config.yml + 重启会话进程(与 setSettings 的静态参数区分)
+                    void window.omp.setApprovalMode(v as ApprovalMode).then((r) => {
+                      if (r.ok) {
+                        addNotice('info', t('notices.approvalUpdated'))
+                        void setSettings({ approvalMode: v as ApprovalMode })
+                      } else {
+                        addNotice('error', r.error ?? '')
+                      }
+                    })
                     flashSaved()
                   }}
                   placeholder={t('settings.approvalPlaceholder')}

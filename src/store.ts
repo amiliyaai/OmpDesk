@@ -288,7 +288,7 @@ export const useStore = create<State>((set, get) => ({
         errorText: null
       }
     }))
-    const res = await window.omp.sendPrompt(text, images)
+    const res = await window.omp.sendPrompt(text, images, chat?.cwd)
     if (!res.ok) {
       set((s) => ({ chat: s.chat ? { ...s.chat, status: 'idle' } : null }))
       get().addNotice('error', tr(get, 'notices.sendFailed', { error: String(res.error) }))
@@ -381,6 +381,9 @@ export const useStore = create<State>((set, get) => ({
         })()
         break
       }
+      case 'app:toggle-files':
+        set({ filePanelOpen: !get().filePanelOpen })
+        break
     }
   },
 

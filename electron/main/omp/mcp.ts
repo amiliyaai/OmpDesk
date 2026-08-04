@@ -1,6 +1,7 @@
 import { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import { agentDir } from './locate'
+import { getBackend } from './backend'
 import type { McpServerDraft, McpServerInfo } from '../../../src/shared/types'
 
 interface McpDoc {
@@ -12,8 +13,8 @@ interface McpDoc {
 
 /**
  * MCP 配置管理
- * 用户级: ~/.omp/agent/mcp.json(可写, OmpDesk 的编辑目标)
- * 项目级: <workspace>/.omp/mcp.json(只读展示)
+ * 用户级: agentDir()/mcp.json(可写, OmpDesk 的编辑目标)
+ * 项目级: <workspace>/.omp|.pi/mcp.json(只读展示, 按后端)
  * 兼容源: .mcp.json 等(只读展示)
  */
 
@@ -22,7 +23,7 @@ function userMcpPath(): string {
 }
 
 function projectMcpPath(workspace: string): string {
-  return path.join(workspace, '.omp', 'mcp.json')
+  return path.join(getBackend().projectDir(workspace), 'mcp.json')
 }
 
 function compatPaths(workspace: string): Array<{ file: string; label: string }> {

@@ -10,7 +10,7 @@ export function FieldSelect({
   value,
   onChange,
   options,
-  placeholder = '请选择…'
+  placeholder
 }: {
   value: string
   onChange: (v: string) => void

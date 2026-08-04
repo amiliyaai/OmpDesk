@@ -3,6 +3,7 @@ import { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import { app, safeStorage } from 'electron'
 import { getApprovalMode, getRoleModels, setApprovalMode, setProviderKey, setRoleModels } from './config'
+import { tMain } from '../i18n'
 import type { OmpProfile } from '../../../src/shared/types'
 
 interface StoredProfile extends OmpProfile {
@@ -91,7 +92,7 @@ export async function saveProfile(
 export async function deleteProfile(id: string): Promise<{ ok: boolean; error?: string }> {
   const all = await readAll()
   const next = all.filter((p) => p.id !== id)
-  if (next.length === all.length) return { ok: false, error: '方案不存在' }
+  if (next.length === all.length) return { ok: false, error: tMain('errors.profileMissing') }
   try {
     await writeAll(next)
     return { ok: true }
@@ -104,11 +105,11 @@ export async function deleteProfile(id: string): Promise<{ ok: boolean; error?: 
 export async function applyProfile(id: string): Promise<{ ok: boolean; error?: string }> {
   const all = await readAll()
   const p = all.find((x) => x.id === id)
-  if (!p) return { ok: false, error: '方案不存在' }
+  if (!p) return { ok: false, error: tMain('errors.profileMissing') }
 
   if (p.apiKeyEnc) {
     const key = decryptKey(p)
-    if (key === null) return { ok: false, error: '无法解密 API key(系统加密不可用或密钥已失效)' }
+    if (key === null) return { ok: false, error: tMain('errors.decryptFailed') }
     const r = await setProviderKey(p.provider, key)
     if (!r.ok) return r
   }

@@ -9,6 +9,11 @@ import os from 'node:os'
 import path from 'node:path'
 import type { AgentBackendId } from '../../../src/shared/types'
 
+export interface SkillRoot {
+  label: 'user' | 'managed' | 'project'
+  dir: string
+}
+
 export interface AgentBackend {
   id: AgentBackendId
   /** 命令行二进制名(omp / pi) */
@@ -21,8 +26,10 @@ export interface AgentBackend {
   logDir(): string
   /** 用户级 mcp.json 路径 */
   mcpUserFile(): string
+  /** 项目级配置目录(workspace/.omp 或 workspace/.pi) */
+  projectDir(workspace: string): string
   /** skills 根目录清单(含项目级) */
-  skillsRoots(workspace: string): string[]
+  skillsRoots(workspace: string): SkillRoot[]
   /** 会话导出命令 */
   exportArgs(filePath: string): string[]
   /** 是否支持单命令 abort_and_prompt(pi 需拆成 abort + prompt) */
@@ -56,12 +63,16 @@ class OmpBackend implements AgentBackend {
     return path.join(this.agentDir(), 'mcp.json')
   }
 
-  skillsRoots(workspace: string): string[] {
+  projectDir(workspace: string): string {
+    return path.join(workspace, '.omp')
+  }
+
+  skillsRoots(workspace: string): SkillRoot[] {
     return [
-      path.join(os.homedir(), '.omp', 'skills'),
-      path.join(this.agentDir(), 'skills'),
-      path.join(this.agentDir(), 'managed-skills'),
-      path.join(workspace, '.omp', 'skills')
+      { label: 'user', dir: path.join(os.homedir(), '.omp', 'skills') },
+      { label: 'user', dir: path.join(this.agentDir(), 'skills') },
+      { label: 'managed', dir: path.join(this.agentDir(), 'managed-skills') },
+      ...(workspace ? [{ label: 'project' as const, dir: path.join(workspace, '.omp', 'skills') }] : [])
     ]
   }
 
@@ -93,12 +104,16 @@ class PiBackend implements AgentBackend {
     return path.join(this.agentDir(), 'mcp.json')
   }
 
-  skillsRoots(workspace: string): string[] {
+  projectDir(workspace: string): string {
+    return path.join(workspace, '.pi')
+  }
+
+  skillsRoots(workspace: string): SkillRoot[] {
     return [
-      path.join(os.homedir(), '.pi', 'skills'),
-      path.join(this.agentDir(), 'skills'),
-      path.join(this.agentDir(), 'managed-skills'),
-      path.join(workspace, '.pi', 'skills')
+      { label: 'user', dir: path.join(os.homedir(), '.pi', 'skills') },
+      { label: 'user', dir: path.join(this.agentDir(), 'skills') },
+      { label: 'managed', dir: path.join(this.agentDir(), 'managed-skills') },
+      ...(workspace ? [{ label: 'project' as const, dir: path.join(workspace, '.pi', 'skills') }] : [])
     ]
   }
 

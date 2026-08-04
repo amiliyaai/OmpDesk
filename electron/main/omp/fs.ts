@@ -5,6 +5,7 @@
  */
 import { promises as fsp } from 'node:fs'
 import path from 'node:path'
+import { tMain } from '../i18n'
 import type { WorkspaceFile } from '../../../src/shared/types'
 
 const SKIP_DIRS = new Set([
@@ -72,17 +73,20 @@ export async function readWorkspaceFile(
   root: string,
   relPath: string
 ): Promise<{ ok: boolean; content?: string; error?: string }> {
-  const base = path.resolve(root)
+  const base = await fsp.realpath(path.resolve(root)).catch(() => path.resolve(root))
   const target = path.resolve(base, relPath)
-  // 防路径穿越: 目标必须位于 workspace 内
-  if (target !== base && !target.startsWith(base + path.sep)) {
-    return { ok: false, error: '路径越界' }
-  }
   try {
-    const st = await fsp.stat(target)
-    if (!st.isFile()) return { ok: false, error: '不是文件' }
-    if (st.size > MAX_FILE_BYTES) return { ok: false, error: `文件超过 ${MAX_FILE_BYTES / 1024}KB 限制` }
-    const content = await fsp.readFile(target, 'utf8')
+    const real = await fsp.realpath(target)
+    // 防路径穿越 + 符号链接逃逸: 解析后的真实路径必须位于 workspace 内
+    if (real !== base && !real.startsWith(base + path.sep)) {
+      return { ok: false, error: tMain('errors.pathEscape') }
+    }
+    const st = await fsp.stat(real)
+    if (!st.isFile()) return { ok: false, error: tMain('errors.notFile') }
+    if (st.size > MAX_FILE_BYTES) {
+      return { ok: false, error: tMain('errors.fileTooLarge', { kb: MAX_FILE_BYTES / 1024 }) }
+    }
+    const content = await fsp.readFile(real, 'utf8')
     return { ok: true, content }
   } catch (e) {
     return { ok: false, error: (e as Error).message }

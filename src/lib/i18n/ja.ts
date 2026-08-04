@@ -1,4 +1,5 @@
 /** 日本語辞書(keys must match zh.ts) */
+import type { DictShape } from './types'
 
 export const ja = {
   common: {
@@ -320,5 +321,22 @@ export const ja = {
   ipc: {
     parseFailed: 'セッションファイルを解析できません',
     pickDirTitle: '作業ディレクトリを選択'
+  },
+
+  errors: {
+    processExited: 'omp プロセスが終了しました (code={code}, signal={signal})',
+    readyTimeout: 'omp ready 待機がタイムアウト ({ms}ms)',
+    commandFailed: 'omp コマンドに失敗',
+    processNotRunning: 'omp プロセスが実行されていません',
+    commandTimeout: '{command} の応答待機がタイムアウト',
+    toolFailed: 'ツール実行に失敗',
+    sessionCompacted: 'セッションを圧縮しました: {summary}',
+    illegalPath: '不正なパス',
+    emptyTitle: 'タイトルを空にできません',
+    profileMissing: 'プロファイルが見つかりません',
+    decryptFailed: 'API Key を復号できません (システム暗号化が利用不可またはキーが無効)',
+    pathEscape: 'パスがワークスペース外です',
+    notFile: 'ファイルではありません',
+    fileTooLarge: '{kb}KB を超えるファイルです'
   }
-} as const
+} as const satisfies DictShape

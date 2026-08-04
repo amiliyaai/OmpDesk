@@ -1,25 +1,12 @@
 import { promises as fsp } from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import YAML from 'yaml'
-import { agentDir } from './locate'
+import { getBackend } from './backend'
 import { getSkillFilter, setSkillEnabled } from './config'
 import type { SkillInfo } from '../../../src/shared/types'
 
-interface SkillRoot {
-  label: 'user' | 'project' | 'managed'
-  dir: string
-}
-
-function skillRoots(workspace: string): SkillRoot[] {
-  const home = os.homedir()
-  const roots: SkillRoot[] = [
-    { label: 'user', dir: path.join(home, '.omp', 'skills') },
-    { label: 'user', dir: path.join(agentDir(), 'skills') },
-    { label: 'managed', dir: path.join(agentDir(), 'managed-skills') }
-  ]
-  if (workspace) roots.push({ label: 'project', dir: path.join(workspace, '.omp', 'skills') })
-  return roots
+function skillRoots(workspace: string): Array<{ label: 'user' | 'project' | 'managed'; dir: string }> {
+  return getBackend().skillsRoots(workspace)
 }
 
 interface Frontmatter {

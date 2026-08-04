@@ -33,11 +33,9 @@ export function MenuBar() {
     document.execCommand(cmd)
   }
 
-  const zoom = (factor: number): MenuAction => () => {
-    const el = document.body
-    const s = el.style as CSSStyleDeclaration & { zoom?: string }
-    const cur = Number(s.zoom || 1)
-    s.zoom = String(Math.min(2, Math.max(0.5, cur * factor)))
+  // 缩放走 webContents zoom(与原生 View 菜单角色一致, 避免 CSS zoom 双轨)
+  const zoomBy = (delta: number): MenuAction => () => {
+    void window.omp.zoom(delta)
   }
 
   const MENUS: Array<{ id: string; label: string; items: MenuEntry[] }> = [
@@ -73,9 +71,9 @@ export function MenuBar() {
       items: [
         { label: t('menubar.toggleFiles'), shortcut: 'Ctrl+Shift+E', action: () => setFilePanelOpen(!filePanelOpen) },
         'sep',
-        { label: t('menubar.zoomIn'), shortcut: 'Ctrl+Shift+=', action: zoom(1.1) },
-        { label: t('menubar.zoomOut'), shortcut: 'Ctrl+-', action: zoom(1 / 1.1) },
-        { label: t('menubar.resetZoom'), shortcut: 'Ctrl+0', action: () => { document.body.style.zoom = '' } },
+        { label: t('menubar.zoomIn'), shortcut: 'Ctrl+Shift+=', action: zoomBy(0.5) },
+        { label: t('menubar.zoomOut'), shortcut: 'Ctrl+-', action: zoomBy(-0.5) },
+        { label: t('menubar.resetZoom'), shortcut: 'Ctrl+0', action: () => void window.omp.zoomReset() },
         'sep',
         { label: t('menubar.fullscreen'), shortcut: 'F11', action: () => void window.omp.toggleFullScreen() }
       ]

@@ -1,6 +1,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import { FrameDecoder } from './protocol'
+import { tMain } from '../i18n'
 import type { AgentBackend } from './backend'
 import type { UiRequest } from '../../../src/shared/types'
 
@@ -74,7 +75,7 @@ export class OmpClient extends EventEmitter {
     child.on('exit', (code, signal) => {
       this.ready = false
       this.busy = false
-      const err = new Error(`omp 进程退出 (code=${code ?? 'null'}, signal=${signal ?? 'null'})`)
+      const err = new Error(tMain('errors.processExited', { code: code ?? 'null', signal: signal ?? 'null' }))
       for (const [, p] of this.pending) {
         clearTimeout(p.timer)
         p.reject(err)
@@ -95,7 +96,7 @@ export class OmpClient extends EventEmitter {
       const timer = setTimeout(() => {
         const i = this.readyWaiters.indexOf(done)
         if (i >= 0) this.readyWaiters.splice(i, 1)
-        reject(new Error(`等待 omp ready 超时 (${READY_TIMEOUT}ms)`))
+        reject(new Error(tMain('errors.readyTimeout', { ms: READY_TIMEOUT })))
       }, READY_TIMEOUT)
       const done = (): void => {
         clearTimeout(timer)
@@ -128,7 +129,7 @@ export class OmpClient extends EventEmitter {
           clearTimeout(p.timer)
           this.pending.delete(id)
           if (frame.success) p.resolve(frame.data ?? null)
-          else p.reject(new Error(String(frame.error ?? 'omp 命令失败')))
+          else p.reject(new Error(String(frame.error ?? tMain('errors.commandFailed'))))
         }
         break
       }
@@ -178,14 +179,14 @@ export class OmpClient extends EventEmitter {
 
   /** 发命令并等待 response 帧; timeoutMs=0 表示不限时(如 prompt) */
   request(command: string, params: Record<string, unknown> = {}, timeoutMs = COMMAND_TIMEOUT): Promise<unknown> {
-    if (!this.isAlive) return Promise.reject(new Error('omp 进程未运行'))
+    if (!this.isAlive) return Promise.reject(new Error(tMain('errors.processNotRunning')))
     const id = `req_${this.nextId++}`
     return new Promise((resolve, reject) => {
       const timer =
         timeoutMs > 0
           ? setTimeout(() => {
               this.pending.delete(id)
-              reject(new Error(`等待命令 ${command} 响应超时`))
+              reject(new Error(tMain('errors.commandTimeout', { command })))
             }, timeoutMs)
           : (undefined as unknown as NodeJS.Timeout)
       this.pending.set(id, { resolve, reject, timer })

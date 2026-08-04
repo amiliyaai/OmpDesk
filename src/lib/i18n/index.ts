@@ -5,15 +5,13 @@
 import { zh } from './zh'
 import { en } from './en'
 import { ja } from './ja'
-import type { Dict, Locale, Paths } from './types'
+import type { DictKey, DictShape, Locale } from './types'
 
-export type { Locale, Dict, Paths } from './types'
+export type { DictKey, DictShape, Locale, Paths } from './types'
 
-export type DictKey = Paths<typeof zh>
+const dicts: Record<Locale, DictShape> = { 'zh-CN': zh, en, ja }
 
-const dicts: Record<Locale, Dict> = { 'zh-CN': zh, en, ja }
-
-function lookup(dict: Dict, key: string): unknown {
+function lookup(dict: DictShape, key: string): unknown {
   let val: unknown = dict
   for (const seg of key.split('.')) {
     if (val === null || typeof val !== 'object') return undefined
@@ -43,6 +41,6 @@ function interpolate(text: string, params: Record<string, string | number>): str
 }
 
 /** 固定语言的翻译函数(主进程/非组件逻辑用) */
-export function createT(locale: Locale): (key: DictKey | string, params?: Record<string, string | number>) => string {
+export function createT(locale: Locale): (key: DictKey, params?: Record<string, string | number>) => string {
   return (key, params) => translate(locale, key, params)
 }

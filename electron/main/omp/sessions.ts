@@ -5,6 +5,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import { sessionsRoot } from './locate'
 import { getBackend } from './backend'
+import { tMain } from '../i18n'
 import type {
   DisplayMessage,
   DisplayToolCall,
@@ -159,7 +160,7 @@ export async function parseSession(filePath: string): Promise<SessionDetail | nu
           if (entry) {
             entry.call.status = m.isError ? 'error' : 'success'
             entry.call.isError = Boolean(m.isError)
-            entry.call.errorMessage = m.isError ? '工具执行失败' : undefined
+            entry.call.errorMessage = m.isError ? tMain('errors.toolFailed') : undefined
             entry.call.result = extractText(m.content)
             if (m.error && typeof m.error === 'string') entry.call.errorMessage = m.error
           }
@@ -194,7 +195,7 @@ export async function parseSession(filePath: string): Promise<SessionDetail | nu
           messages.push({
             id: randomHex(),
             role: 'notice',
-            content: [{ kind: 'text', text: `会话已压缩: ${rec.summary}` }],
+            content: [{ kind: 'text', text: tMain('errors.sessionCompacted', { summary: rec.summary }) }],
             toolCalls: [],
             createdAt: parseTs(rec.timestamp)
           })
@@ -245,7 +246,7 @@ function extractFilePaths(args: unknown, depth = 0): string[] {
 export async function deleteSession(filePath: string): Promise<{ ok: boolean; error?: string }> {
   const root = path.resolve(sessionsRoot())
   const resolved = path.resolve(filePath)
-  if (!resolved.startsWith(root + path.sep)) return { ok: false, error: '非法路径' }
+  if (!resolved.startsWith(root + path.sep)) return { ok: false, error: tMain('errors.illegalPath') }
   try {
     await fsp.unlink(resolved)
   } catch (e) {
@@ -264,7 +265,7 @@ export async function renameSession(
   title: string
 ): Promise<{ ok: boolean; error?: string }> {
   const clean = title.trim().slice(0, 200)
-  if (!clean) return { ok: false, error: '标题不能为空' }
+  if (!clean) return { ok: false, error: tMain('errors.emptyTitle') }
   try {
     const rec = {
       type: 'title_change',

@@ -1,4 +1,5 @@
 /** English dictionary (keys must match zh.ts) */
+import type { DictShape } from './types'
 
 export const en = {
   common: {
@@ -320,5 +321,22 @@ export const en = {
   ipc: {
     parseFailed: 'Cannot parse session file',
     pickDirTitle: 'Select workspace'
+  },
+
+  errors: {
+    processExited: 'omp process exited (code={code}, signal={signal})',
+    readyTimeout: 'Timed out waiting for omp ready ({ms}ms)',
+    commandFailed: 'omp command failed',
+    processNotRunning: 'omp process not running',
+    commandTimeout: 'Timed out waiting for {command} response',
+    toolFailed: 'Tool execution failed',
+    sessionCompacted: 'Session compacted: {summary}',
+    illegalPath: 'Illegal path',
+    emptyTitle: 'Title cannot be empty',
+    profileMissing: 'Profile not found',
+    decryptFailed: 'Cannot decrypt API key (system encryption unavailable or key invalid)',
+    pathEscape: 'Path escapes workspace',
+    notFile: 'Not a file',
+    fileTooLarge: 'File exceeds {kb}KB limit'
   }
-} as const
+} as const satisfies DictShape

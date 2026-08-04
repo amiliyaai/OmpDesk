@@ -251,6 +251,7 @@ export type MainEvent =
   | { type: 'app:new-session' }
   | { type: 'app:open-settings' }
   | { type: 'app:pick-workspace' }
+  | { type: 'app:toggle-files' }
   | { type: 'updater:state'; state: UpdaterState }
 
 // ---------- 自动更新状态 ----------
@@ -286,10 +287,13 @@ export interface OmpApi {
   exportSession(filePath: string): Promise<{ ok: boolean; path?: string; error?: string }>
   newSession(workspace: string): Promise<{ ok: boolean; error?: string }>
   openSession(filePath: string): Promise<{ ok: boolean; cwd?: string; error?: string }>
-  sendPrompt(text: string, images?: string[]): Promise<{ ok: boolean; error?: string }>
+  /** workspace 缺省时用默认工作目录 */
+  sendPrompt(text: string, images?: string[], workspace?: string): Promise<{ ok: boolean; error?: string }>
   abort(): Promise<void>
   getModels(): Promise<ModelInfo[]>
   setModel(provider: string, modelId: string): Promise<{ ok: boolean; error?: string }>
+  /** 写 config.yml 审批模式并重启会话进程 */
+  setApprovalMode(mode: ApprovalMode): Promise<{ ok: boolean; error?: string }>
   getSettings(): Promise<AppSettings>
   setSettings(patch: Partial<AppSettings>): Promise<AppSettings>
   getProviders(): Promise<ProviderSummary[]>
@@ -315,6 +319,10 @@ export interface OmpApi {
   readFile(workspace: string, relPath: string): Promise<{ ok: boolean; content?: string; error?: string }>
   /** 切换窗口全屏 */
   toggleFullScreen(): Promise<void>
+  /** 网页缩放(delta 步进, 与原生 View 菜单角色一致) */
+  zoom(delta: number): Promise<void>
+  /** 重置缩放 */
+  zoomReset(): Promise<void>
   /** 完全退出应用(菜单"退出") */
   quit(): Promise<void>
   /** 弹出"关于"对话框(主进程) */

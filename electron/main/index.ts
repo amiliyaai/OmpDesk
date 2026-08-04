@@ -92,21 +92,22 @@ async function bootstrap(): Promise<void> {
       const backendChanged = resolveBackendId(s.backend) !== resolveBackendId(settings.backend)
       settings = s
       setLocale(s.language ?? 'zh-CN')
+      registerHotkey()
+      rebuildTrayMenu()
       if (backendChanged) {
-        // 后端切换: 重建池 + 按新后端重新探测二进制
+        // 后端切换: 先按新后端重定位二进制, 再重建进程池(顺序关键, 否则池用旧二进制)
         setBackend(resolveBackendId(s.backend))
         void (async () => {
           ompBin = (await locateAgent()) ?? ''
           const updated = await writeSettings({ ompPath: ompBin, ompAutoDetected: Boolean(ompBin) })
           settings = updated
           sendToWindow({ type: 'settings:changed', settings: updated })
+          createPool()
+          sendToWindow({ type: 'sessions:changed' })
         })()
-        createPool()
-        sendToWindow({ type: 'sessions:changed' })
+        return
       }
       sendToWindow({ type: 'settings:changed', settings: s })
-      registerHotkey()
-      rebuildTrayMenu()
     },
     notifyModels: (models) => sendToWindow({ type: 'models:available', models: models as never }),
     getLogTail: readLogTail,
@@ -221,6 +222,14 @@ function registerWindowIpc(): void {
   ipcMain.handle('window:toggleFullScreen', () => {
     if (!mainWindow) return
     mainWindow.setFullScreen(!mainWindow.isFullScreen())
+  })
+  ipcMain.handle('window:zoom', (_e, delta: number) => {
+    if (!mainWindow) return
+    const wc = mainWindow.webContents
+    wc.setZoomLevel(Math.min(3, Math.max(-2, wc.getZoomLevel() + delta)))
+  })
+  ipcMain.handle('window:zoomReset', () => {
+    mainWindow?.webContents.setZoomLevel(0)
   })
   ipcMain.handle('app:quit', () => {
     isQuitting = true
@@ -380,11 +389,21 @@ function setApplicationMenu(): void {
     {
       label: t('menubar.view'),
       submenu: [
+        {
+          label: t('menubar.toggleFiles'),
+          accelerator: 'CmdOrCtrl+Shift+E',
+          click: () => sendToWindow({ type: 'app:toggle-files' })
+        },
+        { type: 'separator' },
         { role: 'zoomIn', label: t('menubar.zoomIn') },
         { role: 'zoomOut', label: t('menubar.zoomOut') },
         { role: 'resetZoom', label: t('menubar.resetZoom') },
         { type: 'separator' },
-        { role: 'togglefullscreen', label: t('menubar.fullscreen') }
+        {
+          label: t('menubar.fullscreen'),
+          accelerator: 'F11',
+          click: () => mainWindow?.setFullScreen(!mainWindow?.isFullScreen())
+        }
       ]
     },
     ...(isMac ? ([{ role: 'windowMenu' as const }] satisfies MenuItemConstructorOptions[]) : []),

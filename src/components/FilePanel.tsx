@@ -30,7 +30,7 @@ function FilePreview({ content, relPath }: { content: string; relPath: string })
   )
 }
 
-/** 工作区文件树(扁平列表 → 按目录深度缩进; 目录行仅作分组) */
+/** 工作区文件树(扁平列表 → 按目录深度缩进; 目录行可折叠, 折叠隐藏整棵子树) */
 function FileTree({
   files,
   onOpen
@@ -47,10 +47,9 @@ function FileTree({
       return next
     })
   }
-  // 目录折叠: 计算每个文件是否在折叠目录下
+  // 折叠: 文件与目录统一检查祖先是否在 collapsed 中(折叠 src 后 src/components 也隐藏)
   const rows = files.filter((f) => {
-    if (f.type === 'dir') return true
-    const parts = f.relPath.split('/')
+    const parts = f.relPath.split('/').filter(Boolean)
     parts.pop()
     let acc = ''
     for (const p of parts) {
@@ -63,9 +62,7 @@ function FileTree({
   return (
     <div className="file-tree">
       {rows.map((f) => {
-        const depth = f.type === 'dir'
-          ? f.relPath.split('/').length - 1
-          : f.relPath.split('/').length - 1
+        const depth = f.relPath.split('/').filter(Boolean).length - 1
         if (f.type === 'dir') {
           const key = f.relPath.replace(/\/$/, '')
           const isCollapsed = collapsed.has(key)
@@ -104,7 +101,8 @@ function FileTree({
  */
 export function FilePanel() {
   const { t } = useI18n()
-  const chat = useStore((s) => s.chat)
+  const cwd = useStore((s) => s.chat?.cwd)
+  const defaultWorkspace = useStore((s) => s.settings?.defaultWorkspace)
   const sessionFiles = useStore((s) => s.sessionFiles)
   const setFilePanelOpen = useStore((s) => s.setFilePanelOpen)
   const [mode, setMode] = useState<'session' | 'workspace'>('session')
@@ -115,7 +113,8 @@ export function FilePanel() {
   const [width, setWidth] = useState(330)
   const dragRef = useRef<{ startX: number; startW: number } | null>(null)
 
-  const workspace = chat?.cwd ?? ''
+  // 无会话时回退默认工作目录, 保证工作区树始终有数据源
+  const workspace = cwd || defaultWorkspace || ''
 
   // 会话切换时清空标签页
   useEffect(() => {
@@ -123,12 +122,14 @@ export function FilePanel() {
     setActive(null)
     setContents({})
     setTree(null)
-  }, [chat?.currentFile])
+  }, [cwd])
 
-  // 懒加载工作区树
-  const loadTree = useCallback(() => {
-    if (tree === null && workspace) void window.omp.listFiles(workspace).then(setTree)
-  }, [tree, workspace])
+  // 工作区模式自动懒加载文件树(树被清空/首次进入时)
+  useEffect(() => {
+    if (mode === 'workspace' && tree === null && workspace) {
+      void window.omp.listFiles(workspace).then(setTree)
+    }
+  }, [mode, tree, workspace])
 
   const openFile = useCallback(
     async (relPath: string) => {
@@ -177,7 +178,7 @@ export function FilePanel() {
         <button className={`file-mode ${mode === 'session' ? 'active' : ''}`} onClick={() => setMode('session')}>
           {t('files.session')}
         </button>
-        <button className={`file-mode ${mode === 'workspace' ? 'active' : ''}`} onClick={() => { setMode('workspace'); loadTree() }}>
+        <button className={`file-mode ${mode === 'workspace' ? 'active' : ''}`} onClick={() => setMode('workspace')}>
           {t('files.workspace')}
         </button>
       </div>
