@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useStore } from '../store'
 import { useAutoScroll, useVirtualList } from '../lib/virtual'
 import { MessageBubble, NoticeBubble, UserBubble } from './MessageBubble'
@@ -7,7 +7,11 @@ import { EmptyState } from './EmptyState'
 import { ScrollTopButton } from './ScrollTopButton'
 import type { DisplayMessage } from '../shared/types'
 
-/** 虚拟滚动的单条消息容器(实测高度反馈给虚拟列表) */
+/**
+ * 虚拟滚动的单条消息容器。
+ * 高度变化(展开/收起 thinking、工具卡片、图片加载等)通过 ResizeObserver
+ * 实时反馈给虚拟列表 —— 仅靠 ref 挂载时测量会漏掉展开导致的偏移, 造成行重叠
+ */
 const Row = memo(function Row({
   msg,
   index,
@@ -19,9 +23,20 @@ const Row = memo(function Row({
   offset: number
   measure: (i: number, el: HTMLDivElement | null) => void
 }) {
+  const elRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const el = elRef.current
+    if (!el) return
+    measure(index, el)
+    const ro = new ResizeObserver(() => measure(index, el))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [index, measure])
+
   return (
     <div
-      ref={(el) => measure(index, el)}
+      ref={elRef}
       className="vrow"
       style={{ transform: `translateY(${offset}px)` }}
     >

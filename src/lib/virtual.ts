@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 export interface VirtualItem<T> {
   item: T
@@ -132,7 +132,8 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
   }
 
   // 记录实测高度(rAF 节流合并, 触发一次重渲染)
-  const measure = (index: number, el: HTMLDivElement | null): void => {
+  // useCallback 保证引用稳定 —— Row 的 ResizeObserver effect 依赖它, 避免反复重建
+  const measure = useCallback((index: number, el: HTMLDivElement | null): void => {
     if (!el) return
     const h = el.getBoundingClientRect().height
     if (h <= 0 || Math.abs((heights.current.get(index) ?? 0) - h) <= 1) return
@@ -146,7 +147,7 @@ export function useVirtualList<T>(items: T[], opts: Options = {}): VirtualList<T
         setVersion((v) => v + 1)
       }
     })
-  }
+  }, [])
 
   void version
   void innerRef
