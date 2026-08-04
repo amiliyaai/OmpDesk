@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `scripts/extract-changelog.mjs` — changelog section extractor used by the pipeline
 - Release process documentation (`RELEASE.md`)
 
+### Changed
+- UI fonts: bundle Inter Variable for Latin UI text and JetBrains Mono Variable for monospace (code / logs / tool names), Chinese text falls back to system fonts (PingFang SC / Microsoft YaHei); both via fontsource (OFL)
+
 ### Fixed
 - CI builds now pass `--publish never`: electron-builder auto-publishes on git tags (publish config present) and failed without `GH_TOKEN` in the build jobs — publishing is done exclusively by the release job
 - deb packaging requires an author email — added to `package.json`
