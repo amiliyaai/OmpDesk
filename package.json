@@ -1,6 +1,6 @@
 {
   "name": "ompdesk",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Desktop GUI client for oh-my-pi (omp) — the terminal AI coding agent. Streaming chat, tool calls, sessions, MCP & Skills management. Windows · macOS · Linux",
   "main": "./out/main/index.js",
   "author": {

@@ -4,9 +4,15 @@ All notable changes to OmpDesk are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each release ships to all three platforms (Windows / macOS / Linux) — see [RELEASE_NOTES.md](RELEASE_NOTES.md) for per-release artifact lists and installation notes.
 
-## [Unreleased]
+## [0.4.0] - 2026-08-05
 
 ### Added
+- **i18n (multi-language)**: lightweight zero-dependency i18n layer with `zh-CN` / `en` / `ja` dictionaries, type-safe keys and `{param}` interpolation; switch language in *Settings → General* (persisted); every user-visible string extracted (~260 across renderer and main process — UI, tray, notifications, updater dialogs, about)
+- **Application menu bar (Codex-style)**: File / Edit / View / Help — self-drawn in the renderer on Windows/Linux, native app menu on macOS; accelerators registered on all platforms (Ctrl+N new chat, Ctrl+O open folder, Ctrl+, settings, Ctrl+Shift+E file panel, F11 fullscreen, zoom); Edit roles (undo/redo/cut/copy/paste/select-all)
+- **Settings restructure (Codex-style grouped navigation)**: three groups (Personal / Agent / System) with eight pages — General / Appearance / Model Service / Integrations / Data / Usage / Backend / About; About shows the dynamic app version
+- **File panel**: session files (extracted from tool calls in history + live streaming) and workspace file tree (skips `node_modules`/`.git`, depth & entry limits) with multi-tab read-only syntax-highlighted preview and drag-to-resize; new read-only IPC `omp:listFiles` / `omp:readFile` (path-traversal guarded, 512 KB cap)
+- **Process transparency (token dimension)**: per-session token chip in the top bar (Σ input/output), process summary row (messages · tool calls · total tokens) under the message stream, exact token counts on message cards
+- **Dual backend (BackendAdapter)**: omp (oh-my-pi) and pi (earendil-works) share the same origin — backend switch in *Settings → Backend* (auto / omp / pi) re-locates the binary and rebuilds the process pool; differences (binary name, data dir `~/.omp/agent` vs `~/.pi/agent`, `--mode rpc-ui` vs `--mode rpc`, `abort_and_prompt` split, protocol v2 negotiation) are centralized in `electron/main/omp/backend.ts`
 - Auto-update via electron-updater (GitHub Releases feed): silent background check 10 s after launch, system notification + in-app banner when a new version is downloaded, one-click restart & install, manual check from the tray menu
 - About dialog (tray / app menu) and macOS About panel
 - GitHub Actions release pipeline: `v*` tag → Windows / macOS (universal) / Linux builds → GitHub Release with notes auto-extracted from `CHANGELOG.md`; artifacts include `latest*.yml` update metadata
@@ -14,7 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Release process documentation (`RELEASE.md`)
 
 ### Changed
+- Settings tabs consolidated: Model Service (unchanged) and Integrations (MCP + Skills merged); Usage and Backend pages added
+- Message token display now shows exact counts instead of rounded `k` values
 - UI fonts: bundle Inter Variable for Latin UI text and JetBrains Mono Variable for monospace (code / logs / tool names), Chinese text falls back to system fonts (PingFang SC / Microsoft YaHei); both via fontsource (OFL)
+- E2E settings suite updated for the grouped navigation (MCP/Skills now under Integrations)
 
 ### Fixed
 - CI builds now pass `--publish never`: electron-builder auto-publishes on git tags (publish config present) and failed without `GH_TOKEN` in the build jobs — publishing is done exclusively by the release job

@@ -41,12 +41,18 @@ await win.waitForSelector('.modal', { timeout: 5000 })
 check('设置弹窗打开', true)
 await win.screenshot({ path: join(shotDir, 'settings-models.png') })
 
-const tabs = ['MCP', 'Skills', '外观', '数据']
+// 设置分组: 个人/Agent/系统(Codex 式); MCP+Skills 合并进"集成"
+const tabs = ['集成', '外观', '数据', '用量', '后端', '关于']
 for (const t of tabs) {
   await win.click(`.settings-tab:has-text("${t}")`)
   await win.waitForTimeout(400)
   check(`tab ${t} 渲染`, await win.locator('.settings-content').count() === 1)
 }
+// 集成页含 MCP 与 Skills 列表区
+await win.click('.settings-tab:has-text("集成")')
+await win.waitForTimeout(400)
+check('集成页 MCP 区渲染', (await win.locator('.section-title:has-text("MCP")').count()) === 1)
+check('集成页 Skills 区渲染', (await win.locator('.section-title:has-text("Skills")').count()) === 1)
 await win.screenshot({ path: join(shotDir, 'settings-data.png') })
 
 // 回模型服务 tab
