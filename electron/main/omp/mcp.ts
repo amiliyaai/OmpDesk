@@ -232,17 +232,28 @@ export async function getMcpServers(workspace: string): Promise<McpServerInfo[]>
   const out: McpServerInfo[] = []
   const seen = new Set<string>()
 
+  const workspaceRoot = workspace || process.cwd()
+  const sources = await collectSources(workspaceRoot)
+
+  // 用户级 ~/.omp/agent/mcp.json 的 denylist/allowlist 全局生效(omp 语义:
+  // disabledServers 按名屏蔽任何来源的服务器; enabledServers 强制启用名单内条目,
+  // 但不禁用未列入的条目)。setMcpEnabled 对项目/导入来源只写这两个列表。
+  const userDoc = sources.find((s) => s.provider === 'omp' && s.source === 'user' && s.file === userMcpPath())?.doc ?? null
+  const globalDisabled = new Set(userDoc?.disabledServers ?? [])
+  const globalAllowlist = userDoc?.enabledServers
+
   const push = (doc: McpDoc | null, file: string, source: McpServerInfo['source'], provider?: string) => {
     if (!doc) return
-    const disabled = new Set(doc.disabledServers ?? [])
-    const allowlist = doc.enabledServers
+    const localDisabled = new Set(doc.disabledServers ?? [])
     for (const [name, raw] of Object.entries(doc.mcpServers)) {
       if (seen.has(name)) continue // 优先级: 先到先得
       seen.add(name)
       const s = (raw ?? {}) as Record<string, unknown>
       const explicitEnabled = typeof s.enabled === 'boolean' ? s.enabled : true
       const enabled =
-        allowlist !== undefined ? allowlist.includes(name) && !disabled.has(name) : explicitEnabled && !disabled.has(name)
+        globalDisabled.has(name) ? false
+        : globalAllowlist?.includes(name) ? true
+        : explicitEnabled && !localDisabled.has(name)
       out.push({
         name,
         source,
@@ -258,8 +269,7 @@ export async function getMcpServers(workspace: string): Promise<McpServerInfo[]>
     }
   }
 
-  const workspaceRoot = workspace || process.cwd()
-  for (const src of await collectSources(workspaceRoot)) {
+  for (const src of sources) {
     push(src.doc, src.file, src.source, src.provider)
   }
   return out

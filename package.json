@@ -25,7 +25,8 @@
     "pack:mac": "electron-builder --mac --publish never",
     "pack:linux": "electron-builder --linux --publish never",
     "pack:dir": "electron-builder --dir --publish never",
-    "smoke": "npx tsx scripts/smoke.ts"
+    "smoke": "npx tsx scripts/smoke.ts",
+    "verify": "npx tsx scripts/verify-toml.ts && npx tsx scripts/verify-mcp.ts"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

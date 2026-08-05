@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Skills are now discovered from the full provider set (`~/.agents/skills`, `~/.agent/skills`, `~/.claude/skills`, `~/.codex/skills`, `~/.config/opencode/skills`, project `.agents/.claude/.codex/.github/skills`, managed last), with per-item source labels (`omp` / `claude` / `agents` / `codex` / …) and localized scope tags (user / project / managed)
 - TOML parser unit test (`scripts/verify-toml.ts`, run with `npx tsx scripts/verify-toml.ts`)
 
+### Fixed
+- MCP enable/disable switches for imported/project servers did not persist in the UI: user-level `disabledServers` / `enabledServers` in `~/.omp/agent/mcp.json` are now applied globally to every discovered server (omp semantics — denylist wins over allowlist, allowlist force-enables without disabling unlisted entries); regression covered by `scripts/verify-mcp.ts` (isolated temp HOME, `npm run verify` runs both parser and discovery tests)
+
 ## [0.5.0] - 2026-08-05
 
 ### Added
