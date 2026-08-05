@@ -104,6 +104,18 @@ function ProfileForm({ onClose }: { onClose: () => void }) {
 
 // ---------- MCP: 编辑表单 ----------
 
+/** 导入源工具显示名(品牌名, 不随语言变化) */
+const MCP_PROVIDER_LABELS: Record<string, string> = {
+  omp: 'omp',
+  claude: 'Claude Code',
+  codex: 'Codex',
+  cursor: 'Cursor',
+  vscode: 'VS Code',
+  opencode: 'OpenCode',
+  windsurf: 'Windsurf',
+  gemini: 'Gemini CLI'
+}
+
 function McpForm({ editing, onClose }: { editing: { name: string; server: McpServerDraft } | null; onClose: () => void }) {
   const { t } = useI18n()
   const saveMcpServer = useStore((s) => s.saveMcpServer)
@@ -467,7 +479,10 @@ export function SettingsModal() {
                     <div className="list-row-main">
                       <span className="list-row-title">{m.name}</span>
                       <span className="list-row-sub">
-                        {m.type}{m.command ? ` · ${m.command}` : ''}{m.url ? ` · ${m.url}` : ''} · {t('settings.mcpSource', { source: m.source })}
+                        {m.type}{m.command ? ` · ${m.command}` : ''}{m.url ? ` · ${m.url}` : ''} ·{' '}
+                        {m.provider && m.provider !== 'omp'
+                          ? t('settings.mcpSource', { source: MCP_PROVIDER_LABELS[m.provider] ?? m.provider })
+                          : t('settings.mcpSource', { source: m.source })}
                       </span>
                     </div>
                     <Switch
@@ -498,8 +513,15 @@ export function SettingsModal() {
                 {skills.map((s) => (
                   <div className="list-row" key={s.name}>
                     <div className="list-row-main">
-                      <span className="list-row-title">{s.name} <span className="tag">{s.root}</span></span>
-                      <span className="list-row-sub">{s.description || t('settings.noDescription')}{s.globs?.length ? ` · globs: ${s.globs.join(', ')}` : ''}</span>
+                      <span className="list-row-title">
+                        {s.name} <span className="tag">{s.provider ?? 'omp'}</span>
+                      </span>
+                      <span className="list-row-sub">
+                        {s.description || t('settings.noDescription')}
+                        {s.globs?.length ? ` · globs: ${s.globs.join(', ')}` : ''}
+                        {' · '}
+                        {t(`settings.skillRoot${s.root.charAt(0).toUpperCase()}${s.root.slice(1)}`)}
+                      </span>
                     </div>
                     <Switch
                       checked={s.enabled}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
+  ChevronRight,
   FileDown,
-  Folder,
   MoreHorizontal,
   Pencil,
   Pin,
@@ -129,7 +129,16 @@ function SessionItem({ meta }: { meta: SessionMeta }) {
   )
 }
 
-/** 左侧栏: 新建 + 搜索 + 按固定/工作区分组的会话列表 */
+/** 分组折叠状态持久化 key(localStorage) */
+const COLLAPSE_KEY = 'ompdesk.sidebar.collapsed'
+
+/** 路径取末级目录名(项目名); 含路径分隔符按 basename, 否则原样(如固定组) */
+function groupLabel(label: string): string {
+  const parts = label.split(/[\\/]/).filter(Boolean)
+  return parts.length > 1 ? parts[parts.length - 1] : label
+}
+
+/** 左侧栏: 新建 + 搜索 + 按固定/工作区分组的会话列表(分组可展开折叠) */
 export function Sidebar() {
   const { t } = useI18n()
   const sessions = useStore((s) => s.sessions)
@@ -138,9 +147,9 @@ export function Sidebar() {
   const newSession = useStore((s) => s.newSession)
   const setShowSettings = useStore((s) => s.setShowSettings)
   const connected = useStore((s) => s.connected)
+  const q = search.trim().toLowerCase()
 
   const groups = useMemo(() => {
-    const q = search.trim().toLowerCase()
     const filtered = sessions.filter(
       (s) => !q || s.title.toLowerCase().includes(q) || s.workspace.toLowerCase().includes(q)
     )
@@ -159,6 +168,43 @@ export function Sidebar() {
     return groups
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessions, search, t])
+
+  // 分组显示名: 默认取项目名(basename); 同名项目回退完整路径避免混淆
+  const displayNames = useMemo(() => {
+    const byBase = new Map<string, number>()
+    for (const g of groups) {
+      const base = groupLabel(g.label)
+      byBase.set(base, (byBase.get(base) ?? 0) + 1)
+    }
+    const names = new Map<string, string>()
+    for (const g of groups) {
+      const base = groupLabel(g.label)
+      names.set(g.label, (byBase.get(base) ?? 0) > 1 ? g.label : base)
+    }
+    return names
+  }, [groups])
+
+  // 折叠状态(localStorage 持久化; 搜索时强制全部展开)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSE_KEY)
+      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {}
+    } catch {
+      return {}
+    }
+  })
+  const isCollapsed = (label: string): boolean => !q && Boolean(collapsed[label])
+  const toggleGroup = (label: string): void => {
+    setCollapsed((c) => {
+      const next = { ...c, [label]: !c[label] }
+      try {
+        localStorage.setItem(COLLAPSE_KEY, JSON.stringify(next))
+      } catch {
+        /* localStorage 不可用时折叠状态不持久化 */
+      }
+      return next
+    })
+  }
 
   return (
     <aside className="sidebar">
@@ -194,11 +240,16 @@ export function Sidebar() {
           </div>
         )}
         {groups.map((g) => (
-          <div className="session-group" key={g.label}>
-            <div className="session-group-title" title={g.label}>
-              <Folder size={11} />
-              <span>{shortPath(g.label, 20)}</span>
-            </div>
+          <div className={`session-group ${isCollapsed(g.label) ? 'collapsed' : ''}`} key={g.label}>
+            <button
+              className="session-group-title"
+              title={g.label}
+              onClick={() => toggleGroup(g.label)}
+            >
+              <ChevronRight size={11} className={`chev ${isCollapsed(g.label) ? '' : 'open'}`} />
+              <span className="session-group-name">{displayNames.get(g.label)}</span>
+              <span className="session-group-count">{g.items.length}</span>
+            </button>
             {g.items.map((s) => (
               <SessionItem key={s.filePath} meta={s} />
             ))}

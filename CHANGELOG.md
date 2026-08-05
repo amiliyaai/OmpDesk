@@ -4,6 +4,15 @@ All notable changes to OmpDesk are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each release ships to all three platforms (Windows / macOS / Linux) — see [RELEASE_NOTES.md](RELEASE_NOTES.md) for per-release artifact lists and installation notes.
 
+## [Unreleased]
+
+### Added
+- **Sidebar project grouping with expand/collapse**: group headers now show the project name (directory basename, full path on tooltip, path fallback when names collide) plus a session-count badge, and click to collapse/expand — collapse state persists in `localStorage` and is auto-overridden (expanded) while searching
+- **Integrations discovery aligned with oh-my-pi v17** (previously MCP servers and skills from other tools were invisible):
+  - MCP servers are now also discovered from imported sources, in omp's precedence order (first match wins): Claude Code (`~/.claude.json` user-level + `projects[<ws>]`, `~/.claude/mcp.json`), Codex (`config.toml` `[mcp_servers.*]` via a new minimal TOML parser in `electron/main/omp/toml.ts`), Cursor, VS Code (`servers` key), OpenCode, Windsurf, Gemini CLI, plus the root `mcp.json` fallback — all read-only; editing/toggling still writes `~/.omp/agent/mcp.json`
+  - Skills are now discovered from the full provider set (`~/.agents/skills`, `~/.agent/skills`, `~/.claude/skills`, `~/.codex/skills`, `~/.config/opencode/skills`, project `.agents/.claude/.codex/.github/skills`, managed last), with per-item source labels (`omp` / `claude` / `agents` / `codex` / …) and localized scope tags (user / project / managed)
+- TOML parser unit test (`scripts/verify-toml.ts`, run with `npx tsx scripts/verify-toml.ts`)
+
 ## [0.5.0] - 2026-08-05
 
 ### Added

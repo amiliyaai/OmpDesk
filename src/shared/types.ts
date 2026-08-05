@@ -224,6 +224,8 @@ export interface McpServerInfo {
   name: string
   source: 'user' | 'project' | 'compat'
   sourceFile: string
+  /** 来源工具: omp / claude / codex / cursor / vscode / opencode / windsurf / gemini(导入源只读展示) */
+  provider?: string
   type: string // stdio | http | sse
   command?: string
   args?: string[]
@@ -250,6 +252,8 @@ export interface SkillInfo {
   globs?: string[]
   path: string // SKILL.md 路径
   root: string // 根目录名(user/project/managed/plugins)
+  /** 来源 provider: omp / claude / agents / codex / opencode / github / managed */
+  provider?: string
   enabled: boolean
 }
 
