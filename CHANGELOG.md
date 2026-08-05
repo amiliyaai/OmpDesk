@@ -4,6 +4,23 @@ All notable changes to OmpDesk are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each release ships to all three platforms (Windows / macOS / Linux) — see [RELEASE_NOTES.md](RELEASE_NOTES.md) for per-release artifact lists and installation notes.
 
+## [0.5.0] - 2026-08-05
+
+### Added
+- **History session token aggregation**: `aggregateUsage()` stream-scans all session JSONL files (readline, only message `usage` records — no display-structure build), shown in *Settings → Usage* as an all-time total card plus a per-workspace breakdown (sessions / input / output tokens); clicking a workspace row opens a new session there; `newSession` now accepts an explicit workspace
+- **Worktree parallel workspaces**: new `electron/main/omp/worktree.ts` wraps `git worktree list/add/remove` (porcelain parsing, branch-name validation to prevent injection, path removal restricted to known non-main worktrees, no `--force` so uncommitted changes surface as errors)
+  - File menu → *New Worktree Chat* (`Ctrl+Shift+N`): creates a worktree with an auto-generated branch and opens a session inside it
+  - Settings → Data worktree panel: git-repo detection for the default workspace, worktree list (main marker / branch / path), create with optional branch name, open session here, remove (with confirm)
+  - Worktree sessions appear as their own sidebar group automatically (distinct `cwd`)
+- Code review hardening for v0.4.0 (commit `d46aec6`): backend-switch ordering (re-locate before rebuilding the pool), approval-mode dropdown now writes `config.yml` and restarts the pool, file-tree collapse hides whole subtrees, 15+ main-process error strings localized, skills/mcp project paths follow the active backend, native-menu accelerators for `Ctrl+Shift+E` / `F11`, `sendPrompt` targets the session's own workspace, en/ja dictionaries compile-time shape-checked (`satisfies DictShape`), `readFile` realpath guard against symlink escapes
+
+### Fixed
+- Backend switch used the old binary to rebuild the process pool (ordering bug)
+- Approval-mode dropdown showed a fake "restarted" notice without writing `config.yml`
+- File tree collapse left child directories visible ("empty-dir bleed-through")
+- Messages could be sent to the wrong workspace process when a history session from another workspace was open
+- Worktree test branch cleanup verified locally (create → list → remove → clean)
+
 ## [0.4.0] - 2026-08-05
 
 ### Added
