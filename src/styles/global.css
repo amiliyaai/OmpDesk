@@ -1027,3 +1027,7 @@ textarea { resize: none; }
 .usage-total-card span:not(:first-child) { color: var(--text-dim); font-weight: 400; }
 .usage-row { width: 100%; text-align: left; border-radius: 8px; padding: 6px 10px; }
 .usage-row:hover { background: var(--bg-hover); }
+
+/* ---------- Worktree ---------- */
+.worktree-row { display: flex; gap: 8px; align-items: center; }
+.worktree-row input { flex: 1; }

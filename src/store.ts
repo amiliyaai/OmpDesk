@@ -118,6 +118,8 @@ interface State {
   refreshSessions: () => Promise<void>
   setSearch: (s: string) => void
   newSession: (workspace?: string) => Promise<void>
+  /** 创建 git worktree 并在其中打开新会话(并行工作区) */
+  newWorktreeSession: () => Promise<void>
   openSession: (filePath: string) => Promise<void>
   send: (text: string, images?: string[]) => Promise<void>
   abort: () => Promise<void>
@@ -231,6 +233,17 @@ export const useStore = create<State>((set, get) => ({
       sessionFiles: []
     })
     await get().refreshSessions()
+  },
+
+  newWorktreeSession: async () => {
+    const ws = get().settings?.defaultWorkspace ?? ''
+    const r = await window.omp.addWorktree(ws)
+    if (!r.ok || !r.path) {
+      get().addNotice('error', tr(get, 'worktree.createFailed', { error: r.error ?? '' }))
+      return
+    }
+    get().addNotice('info', tr(get, 'worktree.created', { branch: r.branch ?? '' }))
+    await get().newSession(r.path)
   },
 
   openSession: async (filePath) => {
@@ -368,6 +381,9 @@ export const useStore = create<State>((set, get) => ({
         break
       case 'app:new-session':
         void get().newSession()
+        break
+      case 'app:new-worktree-session':
+        void get().newWorktreeSession()
         break
       case 'app:open-settings':
         set({ showSettings: true })

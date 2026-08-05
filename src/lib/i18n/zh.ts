@@ -260,6 +260,7 @@ export const zh = {
     view: '视图',
     help: '帮助',
     newChat: '新聊天',
+    newWorktreeChat: '新建 Worktree 会话',
     openFolder: '打开文件夹',
     settings: '设置',
     close: '关闭',
@@ -286,6 +287,27 @@ export const zh = {
     emptyWorkspace: '文件树为空',
     readFailed: '读取失败: {error}',
     openFailed: '无法打开文件'
+  },
+
+  worktree: {
+    title: 'Worktrees (并行工作区)',
+    notGit: '当前默认工作区不是 git 仓库, 无法创建 worktree',
+    invalidBranch: '分支名包含非法字符 (仅允许字母数字 . _ / -)',
+    pathExists: '目标路径已存在: {path}',
+    notFound: '未找到该 worktree',
+    cannotRemoveMain: '不能移除主工作区',
+    branchPlaceholder: '分支名 (留空自动生成)',
+    create: '创建 Worktree',
+    open: '在此打开会话',
+    remove: '移除',
+    main: '主工作区',
+    empty: '暂无 worktree',
+    removeConfirmTitle: '移除 Worktree',
+    removeConfirmMsg: '移除 worktree「{branch}」?\n存在未提交改动时移除会失败。',
+    created: '已创建 worktree: {branch}',
+    createFailed: '创建 worktree 失败: {error}',
+    removed: '已移除 worktree',
+    removeFailed: '移除 worktree 失败: {error}'
   },
 
   tray: {

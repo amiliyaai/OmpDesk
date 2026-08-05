@@ -344,6 +344,11 @@ function setApplicationMenu(): void {
           click: () => sendToWindow({ type: 'app:new-session' })
         },
         {
+          label: t('menubar.newWorktreeChat'),
+          accelerator: 'CmdOrCtrl+Shift+N',
+          click: () => sendToWindow({ type: 'app:new-worktree-session' })
+        },
+        {
           label: t('menubar.openFolder'),
           accelerator: 'CmdOrCtrl+O',
           click: () => sendToWindow({ type: 'app:pick-workspace' })

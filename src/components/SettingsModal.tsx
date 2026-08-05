@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Check,
   ChevronRight,
@@ -19,7 +19,7 @@ import { Dialog, DialogContent } from './ui/dialog'
 import { FieldSelect } from './ui/field-select'
 import { Switch } from './ui/switch'
 import { useI18n } from '../lib/useI18n'
-import type { ApprovalMode, Language, McpServerDraft, RoleModels, UsageStats } from '../shared/types'
+import type { ApprovalMode, Language, McpServerDraft, RoleModels, UsageStats, WorktreeInfo } from '../shared/types'
 
 // ---------- 模型服务: 方案(CC Switch 式) ----------
 
@@ -230,6 +230,33 @@ export function SettingsModal() {
   const [appVersion, setAppVersion] = useState('')
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null)
   const [usageLoading, setUsageLoading] = useState(false)
+  const [wtGit, setWtGit] = useState<boolean | null>(null)
+  const [wtList, setWtList] = useState<WorktreeInfo[]>([])
+  const [wtBranch, setWtBranch] = useState('')
+
+  const refreshWt = useCallback(async () => {
+    const ws = settings?.defaultWorkspace ?? ''
+    if (!ws) {
+      setWtGit(false)
+      setWtList([])
+      return
+    }
+    const git = await window.omp.isGitRepo(ws)
+    setWtGit(git)
+    setWtList(git ? await window.omp.getWorktrees(ws) : [])
+  }, [settings?.defaultWorkspace])
+
+  const createWt = async (): Promise<void> => {
+    const ws = settings?.defaultWorkspace ?? ''
+    const r = await window.omp.addWorktree(ws, wtBranch || undefined)
+    if (r.ok) {
+      setWtBranch('')
+      addNotice('info', t('worktree.created', { branch: r.branch ?? '' }))
+      await refreshWt()
+    } else {
+      addNotice('error', t('worktree.createFailed', { error: r.error ?? '' }))
+    }
+  }
 
   useEffect(() => {
     if (open) {
@@ -252,6 +279,11 @@ export function SettingsModal() {
       setUsageLoading(false)
     })
   }, [open, tab])
+
+  // 数据页: 打开时检测 worktree
+  useEffect(() => {
+    if (open && tab === 'data') void refreshWt()
+  }, [open, tab, refreshWt])
 
   if (!settings) return null
 
@@ -490,6 +522,83 @@ export function SettingsModal() {
                 <div className="section-hint">
                   {t('settings.ompPathHint', { path: settings.ompPath || t('settings.notDetected'), detected: settings.ompAutoDetected ? t('settings.autoDetected') : '' })}
                 </div>
+
+                <div className="section-title">{t('worktree.title')}</div>
+                {wtGit === null ? (
+                  <div className="section-hint">…</div>
+                ) : !wtGit ? (
+                  <div className="section-hint">{t('worktree.notGit')}</div>
+                ) : (
+                  <>
+                    <div className="worktree-row">
+                      <input
+                        value={wtBranch}
+                        placeholder={t('worktree.branchPlaceholder')}
+                        onChange={(e) => setWtBranch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') void createWt()
+                        }}
+                      />
+                      <button className="btn small primary" onClick={() => void createWt()}>
+                        {t('worktree.create')}
+                      </button>
+                    </div>
+                    {wtList.length === 0 ? (
+                      <div className="section-hint">{t('worktree.empty')}</div>
+                    ) : (
+                      wtList.map((w) => (
+                        <div className="list-row" key={w.path}>
+                          <div className="list-row-main">
+                            <span className="list-row-title truncate">
+                              {w.branch ?? '(detached)'}
+                              {w.isMain && <span className="tag">{t('worktree.main')}</span>}
+                            </span>
+                            <span className="list-row-sub truncate">{w.path}</span>
+                          </div>
+                          {!w.isMain && (
+                            <>
+                              <button
+                                className="icon-btn"
+                                title={t('worktree.open')}
+                                onClick={() => {
+                                  void newSession(w.path)
+                                  setOpen(false)
+                                }}
+                              >
+                                <FolderOpen size={13} />
+                              </button>
+                              <button
+                                className="icon-btn"
+                                title={t('worktree.remove')}
+                                onClick={() =>
+                                  confirm({
+                                    title: t('worktree.removeConfirmTitle'),
+                                    message: t('worktree.removeConfirmMsg', { branch: w.branch ?? w.path }),
+                                    confirmText: t('common.delete'),
+                                    danger: true,
+                                    onOk: () => {
+                                      void window.omp.removeWorktree(workspace, w.path).then((r) => {
+                                        if (r.ok) {
+                                          addNotice('info', t('worktree.removed'))
+                                          void refreshWt()
+                                        } else {
+                                          addNotice('error', t('worktree.removeFailed', { error: r.error ?? '' }))
+                                        }
+                                      })
+                                    }
+                                  })
+                                }
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </>
+                )}
+
                 <div className="form-actions">
                   <button className="btn ghost small" onClick={() => { void window.omp.getOmpLogs(60).then(setLogs); setShowLogs(true) }}>
                     {t('settings.viewOmpLogs')}

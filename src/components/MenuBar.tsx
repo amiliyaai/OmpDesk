@@ -16,6 +16,7 @@ type MenuEntry = { label: string; shortcut?: string; action: MenuAction } | 'sep
 export function MenuBar() {
   const { t } = useI18n()
   const newSession = useStore((s) => s.newSession)
+  const newWorktreeSession = useStore((s) => s.newWorktreeSession)
   const setSettings = useStore((s) => s.setSettings)
   const setShowSettings = useStore((s) => s.setShowSettings)
   const filePanelOpen = useStore((s) => s.filePanelOpen)
@@ -44,6 +45,7 @@ export function MenuBar() {
       label: t('menubar.file'),
       items: [
         { label: t('menubar.newChat'), shortcut: 'Ctrl+N', action: () => void newSession() },
+        { label: t('menubar.newWorktreeChat'), shortcut: 'Ctrl+Shift+N', action: () => void newWorktreeSession() },
         { label: t('menubar.openFolder'), shortcut: 'Ctrl+O', action: openFolder },
         'sep',
         { label: t('menubar.settings'), shortcut: 'Ctrl+,', action: () => setShowSettings(true) },

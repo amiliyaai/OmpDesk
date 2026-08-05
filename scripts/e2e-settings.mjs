@@ -89,6 +89,11 @@ check('视图菜单打开', menuItems > 0)
 check('切换文件面板项存在', (await win.locator('.menubar-menu [role="menuitem"]:has-text("文件面板")').count()) === 1)
 await win.keyboard.press('Escape')
 await win.waitForTimeout(300)
+await win.click('.menubar-item:has-text("文件")')
+await win.waitForTimeout(400)
+check('文件菜单含 Worktree 项', (await win.locator('.menubar-menu [role="menuitem"]:has-text("Worktree")').count()) === 1)
+await win.keyboard.press('Escape')
+await win.waitForTimeout(300)
 
 // ---------- 文件面板(工作区文件树) ----------
 console.log('── 文件面板 ──')

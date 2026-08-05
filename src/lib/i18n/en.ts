@@ -261,6 +261,7 @@ export const en = {
     view: 'View',
     help: 'Help',
     newChat: 'New Chat',
+    newWorktreeChat: 'New Worktree Chat',
     openFolder: 'Open Folder',
     settings: 'Settings',
     close: 'Close',
@@ -287,6 +288,27 @@ export const en = {
     emptyWorkspace: 'File tree is empty',
     readFailed: 'Read failed: {error}',
     openFailed: 'Cannot open file'
+  },
+
+  worktree: {
+    title: 'Worktrees (parallel workspaces)',
+    notGit: 'The current default workspace is not a git repository — cannot create worktrees',
+    invalidBranch: 'Branch name contains illegal characters (only letters, digits, . _ / -)',
+    pathExists: 'Target path already exists: {path}',
+    notFound: 'Worktree not found',
+    cannotRemoveMain: 'Cannot remove the main worktree',
+    branchPlaceholder: 'Branch name (empty = auto-generate)',
+    create: 'Create Worktree',
+    open: 'Open session here',
+    remove: 'Remove',
+    main: 'main',
+    empty: 'No worktrees yet',
+    removeConfirmTitle: 'Remove Worktree',
+    removeConfirmMsg: 'Remove worktree "{branch}"?\nRemoval fails if there are uncommitted changes.',
+    created: 'Worktree created: {branch}',
+    createFailed: 'Failed to create worktree: {error}',
+    removed: 'Worktree removed',
+    removeFailed: 'Failed to remove worktree: {error}'
   },
 
   tray: {

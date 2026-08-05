@@ -36,6 +36,7 @@ import {
 import { getSkills, toggleSkill } from './omp/skills'
 import { ompVersion } from './omp/locate'
 import { listWorkspaceFiles, readWorkspaceFile } from './omp/fs'
+import { createWorktree, isGitRepo, listWorktrees, removeWorktree } from './omp/worktree'
 import { tMain } from './i18n'
 import type {
   AppSettings,
@@ -120,6 +121,13 @@ export function registerIpc(deps: IpcDeps): void {
   ipcMain.handle('omp:readFile', async (_e, workspace: string, relPath: string) => {
     return readWorkspaceFile(workspace, relPath)
   })
+
+  // ---------- Worktree 并行工作区 ----------
+
+  ipcMain.handle('omp:isGitRepo', async (_e, workspace: string) => isGitRepo(workspace))
+  ipcMain.handle('omp:getWorktrees', async (_e, workspace: string) => listWorktrees(workspace))
+  ipcMain.handle('omp:addWorktree', async (_e, workspace: string, branch?: string) => createWorktree(workspace, branch))
+  ipcMain.handle('omp:removeWorktree', async (_e, workspace: string, wtPath: string) => removeWorktree(workspace, wtPath))
 
   ipcMain.handle('omp:deleteSession', async (_e, filePath: string) => {
     const r = await delSession(filePath)

@@ -75,6 +75,14 @@ export interface UsageStats {
   byWorkspace: WorkspaceUsage[]
 }
 
+// ---------- Worktree 并行工作区 ----------
+
+export interface WorktreeInfo {
+  path: string
+  branch?: string // 无 = detached
+  isMain: boolean
+}
+
 // ---------- 文件面板 ----------
 
 export interface WorkspaceFile {
@@ -263,6 +271,7 @@ export type MainEvent =
   | { type: 'ui:resolved'; id: string }
   | { type: 'notice'; level: 'info' | 'warn' | 'error'; text: string }
   | { type: 'app:new-session' }
+  | { type: 'app:new-worktree-session' }
   | { type: 'app:open-settings' }
   | { type: 'app:pick-workspace' }
   | { type: 'app:toggle-files' }
@@ -333,6 +342,14 @@ export interface OmpApi {
   listFiles(workspace: string): Promise<WorkspaceFile[]>
   /** 读取工作区内文件(只读, 防路径穿越, 512KB 上限) */
   readFile(workspace: string, relPath: string): Promise<{ ok: boolean; content?: string; error?: string }>
+  /** 是否 git 仓库(worktree 可用) */
+  isGitRepo(workspace: string): Promise<boolean>
+  /** 列出仓库全部 worktree */
+  getWorktrees(workspace: string): Promise<WorktreeInfo[]>
+  /** 创建 worktree(分支缺省自动命名), 返回新工作区路径 */
+  addWorktree(workspace: string, branch?: string): Promise<{ ok: boolean; path?: string; branch?: string; error?: string }>
+  /** 移除 worktree(仅限 list 结果中的非主工作区) */
+  removeWorktree(workspace: string, wtPath: string): Promise<{ ok: boolean; error?: string }>
   /** 切换窗口全屏 */
   toggleFullScreen(): Promise<void>
   /** 网页缩放(delta 步进, 与原生 View 菜单角色一致) */

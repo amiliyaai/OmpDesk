@@ -261,6 +261,7 @@ export const ja = {
     view: '表示',
     help: 'ヘルプ',
     newChat: '新しいチャット',
+    newWorktreeChat: '新しい Worktree チャット',
     openFolder: 'フォルダを開く',
     settings: '設定',
     close: '閉じる',
@@ -287,6 +288,27 @@ export const ja = {
     emptyWorkspace: 'ファイルツリーは空です',
     readFailed: '読み込み失敗: {error}',
     openFailed: 'ファイルを開けません'
+  },
+
+  worktree: {
+    title: 'Worktrees (並行ワークスペース)',
+    notGit: '現在のデフォルトワークスペースは git リポジトリではありません — worktree を作成できません',
+    invalidBranch: 'ブランチ名に不正な文字が含まれています (英数字と . _ / - のみ)',
+    pathExists: '対象パスは既に存在します: {path}',
+    notFound: 'Worktree が見つかりません',
+    cannotRemoveMain: 'メインの worktree は削除できません',
+    branchPlaceholder: 'ブランチ名 (空欄で自動生成)',
+    create: 'Worktree を作成',
+    open: 'ここでセッションを開く',
+    remove: '削除',
+    main: 'メイン',
+    empty: 'Worktree はまだありません',
+    removeConfirmTitle: 'Worktree を削除',
+    removeConfirmMsg: 'Worktree「{branch}」を削除しますか?\n未コミットの変更があると削除に失敗します。',
+    created: 'Worktree を作成しました: {branch}',
+    createFailed: 'Worktree の作成に失敗: {error}',
+    removed: 'Worktree を削除しました',
+    removeFailed: 'Worktree の削除に失敗: {error}'
   },
 
   tray: {
