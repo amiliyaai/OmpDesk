@@ -117,7 +117,7 @@ interface State {
   boot: () => Promise<void>
   refreshSessions: () => Promise<void>
   setSearch: (s: string) => void
-  newSession: () => Promise<void>
+  newSession: (workspace?: string) => Promise<void>
   openSession: (filePath: string) => Promise<void>
   send: (text: string, images?: string[]) => Promise<void>
   abort: () => Promise<void>
@@ -217,8 +217,8 @@ export const useStore = create<State>((set, get) => ({
 
   setSearch: (search) => set({ search }),
 
-  newSession: async () => {
-    const ws = get().settings?.defaultWorkspace ?? ''
+  newSession: async (workspace) => {
+    const ws = workspace ?? get().settings?.defaultWorkspace ?? ''
     const res = await window.omp.newSession(ws)
     if (!res.ok) {
       get().addNotice('error', tr(get, 'notices.newSessionFailed', { error: String(res.error) }))

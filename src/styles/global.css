@@ -1016,3 +1016,14 @@ textarea { resize: none; }
   font-size: 11px; color: var(--text-faint);
 }
 .process-summary-tokens { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* ---------- 用量聚合 ---------- */
+.usage-total-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-input); font-size: 12.5px; font-variant-numeric: tabular-nums;
+  font-weight: 600; color: var(--text);
+}
+.usage-total-card span:not(:first-child) { color: var(--text-dim); font-weight: 400; }
+.usage-row { width: 100%; text-align: left; border-radius: 8px; padding: 6px 10px; }
+.usage-row:hover { background: var(--bg-hover); }

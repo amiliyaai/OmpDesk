@@ -19,7 +19,7 @@ import { Dialog, DialogContent } from './ui/dialog'
 import { FieldSelect } from './ui/field-select'
 import { Switch } from './ui/switch'
 import { useI18n } from '../lib/useI18n'
-import type { ApprovalMode, Language, McpServerDraft, RoleModels } from '../shared/types'
+import type { ApprovalMode, Language, McpServerDraft, RoleModels, UsageStats } from '../shared/types'
 
 // ---------- 模型服务: 方案(CC Switch 式) ----------
 
@@ -217,6 +217,7 @@ export function SettingsModal() {
   const addNotice = useStore((s) => s.addNotice)
   const confirm = useStore((s) => s.confirm)
   const chat = useStore((s) => s.chat)
+  const newSession = useStore((s) => s.newSession)
   const [tab, setTab] = useState<TabId>('general')
   const [showProfileForm, setShowProfileForm] = useState(false)
   const [showMcpForm, setShowMcpForm] = useState(false)
@@ -227,6 +228,8 @@ export function SettingsModal() {
   const [showLogs, setShowLogs] = useState(false)
   const [saved, setSaved] = useState(false)
   const [appVersion, setAppVersion] = useState('')
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null)
+  const [usageLoading, setUsageLoading] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -239,6 +242,16 @@ export function SettingsModal() {
       void window.omp.getVersion().then(setAppVersion)
     }
   }, [open, settings?.defaultWorkspace, settings?.hotkey, refreshProviders, refreshProfiles, refreshMcp, refreshSkills])
+
+  // 用量页: 打开时拉取历史聚合
+  useEffect(() => {
+    if (!open || tab !== 'usage') return
+    setUsageLoading(true)
+    void window.omp.getUsageStats().then((s) => {
+      setUsageStats(s)
+      setUsageLoading(false)
+    })
+  }, [open, tab])
 
   if (!settings) return null
 
@@ -516,6 +529,44 @@ export function SettingsModal() {
                   }
                   return <div className="section-hint">{t('settings.usagePlaceholder')}</div>
                 })()}
+
+                <div className="section-title">{t('settings.usageTotal')}</div>
+                {usageLoading ? (
+                  <div className="section-hint">{t('settings.usageLoading')}</div>
+                ) : usageStats ? (
+                  <>
+                    <div className="usage-total-card">
+                      <span>{t('settings.usageSessions', { n: usageStats.total.sessions })}</span>
+                      <span>↑ {usageStats.total.input.toLocaleString()}</span>
+                      <span>↓ {usageStats.total.output.toLocaleString()}</span>
+                    </div>
+                    {usageStats.byWorkspace.length > 0 && (
+                      <>
+                        <div className="section-title">{t('settings.usageWorkspaces')}</div>
+                        {usageStats.byWorkspace.map((w) => (
+                          <button
+                            key={w.workspace}
+                            className="list-row usage-row"
+                            title={w.workspace}
+                            onClick={() => {
+                              void newSession(w.workspace)
+                              setOpen(false)
+                            }}
+                          >
+                            <div className="list-row-main">
+                              <span className="list-row-title truncate">{w.workspace}</span>
+                              <span className="list-row-sub">
+                                {t('settings.usageSessions', { n: w.sessions })} · ↑{w.input.toLocaleString()} · ↓{w.output.toLocaleString()}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="section-hint">{t('settings.usageEmpty')}</div>
+                )}
               </div>
             )}
 

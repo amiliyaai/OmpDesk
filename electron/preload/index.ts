@@ -11,6 +11,7 @@ const api: OmpApi = {
   platform: process.platform,
   bootstrap: () => ipcRenderer.invoke('omp:bootstrap'),
   getSessions: () => ipcRenderer.invoke('omp:getSessions'),
+  getUsageStats: () => ipcRenderer.invoke('omp:getUsageStats'),
   getSessionDetail: (filePath: string) => ipcRenderer.invoke('omp:getSessionDetail', filePath),
   deleteSession: (filePath: string) => ipcRenderer.invoke('omp:deleteSession', filePath),
   renameSession: (filePath: string, title: string) =>

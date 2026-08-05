@@ -1,7 +1,9 @@
 import { execFile } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
+import { createReadStream } from 'node:fs'
 import { promises as fsp } from 'node:fs'
 import path from 'node:path'
+import { createInterface } from 'node:readline'
 import { promisify } from 'node:util'
 import { sessionsRoot } from './locate'
 import { getBackend } from './backend'
@@ -11,7 +13,8 @@ import type {
   DisplayToolCall,
   SessionDetail,
   SessionMeta,
-  SessionStatus
+  SessionStatus,
+  UsageStats
 } from '../../../src/shared/types'
 
 const execFileAsync = promisify(execFile)
@@ -340,6 +343,88 @@ function tryParse(line: string): Record<string, unknown> | null {
     return typeof o === 'object' && o !== null ? (o as Record<string, unknown>) : null
   } catch {
     return null
+  }
+}
+
+// ---------- 用量聚合(历史会话 token 统计, 轻量全扫) ----------
+
+/**
+ * 逐行流式扫描单会话文件: 只累加 message 记录的 usage 与 session 的 cwd
+ * 不构建展示结构(parseSession 太重), 损坏文件返回 null
+ */
+async function scanSessionUsage(
+  filePath: string
+): Promise<{ workspace: string; input: number; output: number } | null> {
+  let input = 0
+  let output = 0
+  let workspace = ''
+  let hasUsage = false
+  try {
+    const rl = createInterface({ input: createReadStream(filePath), crlfDelay: Infinity })
+    for await (const line of rl) {
+      const rec = tryParse(line)
+      if (!rec) continue
+      if (rec.type === 'session' && typeof rec.cwd === 'string' && !workspace) {
+        workspace = rec.cwd
+      } else if (rec.type === 'message') {
+        const m = rec.message as Record<string, unknown> | undefined
+        if (m && typeof m === 'object' && m.usage && typeof m.usage === 'object') {
+          input += Number((m.usage as Record<string, unknown>).input ?? 0)
+          output += Number((m.usage as Record<string, unknown>).output ?? 0)
+          hasUsage = true
+        }
+      }
+    }
+  } catch {
+    return null
+  }
+  if (!hasUsage) return null
+  return { workspace, input, output }
+}
+
+/** 全部历史会话的 token 聚合: 总计 + 按工作区(遍历骨架同 listSessions) */
+export async function aggregateUsage(): Promise<UsageStats> {
+  const root = sessionsRoot()
+  let entries
+  try {
+    entries = await fsp.readdir(root, { withFileTypes: true })
+  } catch {
+    return { total: { sessions: 0, input: 0, output: 0 }, byWorkspace: [] }
+  }
+  const byWorkspace = new Map<string, { sessions: number; input: number; output: number }>()
+  let totalSessions = 0
+  let totalInput = 0
+  let totalOutput = 0
+
+  for (const e of entries) {
+    if (!e.isDirectory()) continue
+    const dir = path.join(root, e.name)
+    let files: string[]
+    try {
+      files = (await fsp.readdir(dir)).filter((f) => f.endsWith('.jsonl'))
+    } catch {
+      continue
+    }
+    for (const f of files) {
+      const usage = await scanSessionUsage(path.join(dir, f))
+      if (!usage) continue
+      totalSessions++
+      totalInput += usage.input
+      totalOutput += usage.output
+      const ws = usage.workspace || '(未知)'
+      const agg = byWorkspace.get(ws) ?? { sessions: 0, input: 0, output: 0 }
+      agg.sessions++
+      agg.input += usage.input
+      agg.output += usage.output
+      byWorkspace.set(ws, agg)
+    }
+  }
+
+  return {
+    total: { sessions: totalSessions, input: totalInput, output: totalOutput },
+    byWorkspace: [...byWorkspace.entries()]
+      .map(([workspace, v]) => ({ workspace, ...v }))
+      .sort((a, b) => b.input + b.output - (a.input + a.output))
   }
 }
 

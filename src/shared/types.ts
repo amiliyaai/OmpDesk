@@ -61,6 +61,20 @@ export interface SessionDetail {
   files?: string[]
 }
 
+// ---------- 用量聚合(历史会话 token 统计) ----------
+
+export interface WorkspaceUsage {
+  workspace: string
+  sessions: number
+  input: number
+  output: number
+}
+
+export interface UsageStats {
+  total: { sessions: number; input: number; output: number }
+  byWorkspace: WorkspaceUsage[]
+}
+
 // ---------- 文件面板 ----------
 
 export interface WorkspaceFile {
@@ -281,6 +295,8 @@ export interface OmpApi {
   platform: string
   bootstrap(): Promise<BootstrapData>
   getSessions(): Promise<SessionMeta[]>
+  /** 全部历史会话的 token 聚合(总计 + 按工作区) */
+  getUsageStats(): Promise<UsageStats>
   getSessionDetail(filePath: string): Promise<SessionDetail>
   deleteSession(filePath: string): Promise<{ ok: boolean; error?: string }>
   renameSession(filePath: string, title: string): Promise<{ ok: boolean; error?: string }>

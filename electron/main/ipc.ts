@@ -6,6 +6,7 @@ import {
   deleteSession as delSession,
   exportSession as expSession,
   listSessions,
+  aggregateUsage,
   parseSession,
   renameSession as renSession
 } from './omp/sessions'
@@ -103,6 +104,8 @@ export function registerIpc(deps: IpcDeps): void {
     for (const m of metas) m.pinned = pins.has(m.filePath)
     return metas
   })
+
+  ipcMain.handle('omp:getUsageStats', async () => aggregateUsage())
 
   ipcMain.handle('omp:getSessionDetail', async (_e, filePath: string) => {
     return parseSession(filePath)
